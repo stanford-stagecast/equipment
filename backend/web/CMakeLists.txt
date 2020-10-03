@@ -1,5 +1,1 @@
-# Binary
-add_subdirectory(src)
-
-# Tests
-add_subdirectory(tests)
+add_executable(web_backend web_backend.cc)
