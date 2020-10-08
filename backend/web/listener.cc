@@ -1,10 +1,11 @@
 #include "listener.hh"
 #include "client.hh"
+#include "dispatcher.hh"
 
 #include <iostream>
 
-Listener::Listener(net::io_context &ioc, tcp::endpoint endpoint)
-    : ioc_(ioc), acceptor_(ioc) {
+Listener::Listener(net::io_context &ioc, tcp::endpoint endpoint, std::shared_ptr<Dispatcher> dispatcher)
+    : ioc_(ioc), acceptor_(ioc), dispatcher_(dispatcher) {
   beast::error_code ec;
   acceptor_.open(endpoint.protocol(), ec);
   if (ec) {
@@ -49,7 +50,7 @@ void Listener::on_accept(beast::error_code ec, tcp::socket socket) {
     return fail(ec, "accept");
   }
 
-  std::make_shared<Client>(std::move(socket))->run();
+  std::make_shared<Client>(std::move(socket), dispatcher_)->run();
 
   do_accept();
 }

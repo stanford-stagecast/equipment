@@ -1,9 +1,14 @@
 #include "client.hh"
 #include "listener.hh"
+#include "dispatcher.hh"
 
 #include <iostream>
+#include <sstream>
 
-Client::Client(tcp::socket &&socket) : ws_(std::move(socket)), buffer_() {}
+Client::Client(tcp::socket &&socket,
+               std::shared_ptr<Dispatcher> dispatcher)
+    : ws_(std::move(socket)), buffer_(), queue_(), dispatcher_(dispatcher),
+      write_in_progress_(false) {}
 
 Client::~Client() {}
 
@@ -26,7 +31,9 @@ void Client::on_accept(beast::error_code ec) {
   if (ec) {
     return fail(ec, "accept");
   }
+  dispatcher_->subscribe(weak_from_this());
 
+  ws_.text(ws_.got_text());
   do_read();
 }
 
@@ -41,9 +48,10 @@ void Client::on_read(beast::error_code ec, std::size_t bytes) {
     return fail(ec, "read");
   }
 
-  ws_.text(ws_.got_text());
-  ws_.async_write(buffer_.data(), beast::bind_front_handler(
-                                      &Client::on_write, shared_from_this()));
+  std::string s(net::buffer_cast<char *>(buffer_.data()), buffer_.size());
+  dispatcher_->on_update(s);
+  buffer_.consume(buffer_.size());
+  do_read();
 }
 
 void Client::on_write(beast::error_code ec, std::size_t bytes) {
@@ -55,5 +63,25 @@ void Client::on_write(beast::error_code ec, std::size_t bytes) {
 
   buffer_.consume(buffer_.size());
 
-  do_read();
+  write_in_progress_ = false;
+  do_write();
+}
+
+void Client::do_update(std::string_view update) {
+  queue_.push(update);
+  do_write();
+}
+
+void Client::do_write() {
+  if (write_in_progress_)
+    return;
+  if (queue_.empty())
+    return;
+
+  std::string_view value = queue_.front();
+  write_in_progress_ = true;
+  queue_.pop();
+  ws_.async_write(
+      net::buffer(value),
+      beast::bind_front_handler(&Client::on_write, shared_from_this()));
 }
