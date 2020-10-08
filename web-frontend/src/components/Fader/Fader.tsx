@@ -28,9 +28,12 @@ type FaderProps = {
 export default function Fader({data, dispatch}: FaderProps) {
   return (
     <div className="Fader">
-      Fader {data.channel} is at {data.value} ({Math.round(data.value/255 * 100)}%).
+      <p className="_text">
+        Fader {data.channel} is at {data.value} ({Math.round(data.value/255 * 100)}%).
+      </p>
       <br/>
       <input
+        className="_fader"
         type="range"
         min="0"
         max="255"
@@ -57,4 +60,3 @@ function fader_changed(target: HTMLInputElement, data: FaderData, dispatch: Disp
     value: parseInt(target.value),
   });
 }
-

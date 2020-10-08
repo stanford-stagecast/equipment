@@ -1,2 +1,14 @@
 .Fader {
+	display: flex;
+	flex-direction: column;
+}
+
+._fader {
+	width: 100px;
+	margin-top: 250px;
+	transform: rotate(270deg);
+}
+
+._text {
+	font-size: 8pt;
 }
