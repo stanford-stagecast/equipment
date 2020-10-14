@@ -68,7 +68,7 @@ void Client::on_write(beast::error_code ec, std::size_t bytes) {
 }
 
 void Client::do_update(std::string_view update) {
-  queue_.push(update);
+  queue_.push(std::string(update));
   do_write();
 }
 
@@ -78,7 +78,7 @@ void Client::do_write() {
   if (queue_.empty())
     return;
 
-  std::string_view value = queue_.front();
+  std::string value = queue_.front();
   write_in_progress_ = true;
   queue_.pop();
   ws_.async_write(

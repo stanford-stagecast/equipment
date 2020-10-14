@@ -13,7 +13,7 @@ class Client : public std::enable_shared_from_this<Client> {
 private:
   websocket::stream<beast::tcp_stream> ws_;
   beast::flat_buffer buffer_;
-  std::queue<std::string_view> queue_;
+  std::queue<std::string> queue_;
   std::shared_ptr<Dispatcher> dispatcher_;
   bool write_in_progress_;
 

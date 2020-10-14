@@ -2,20 +2,20 @@
 #include "client.hh"
 #include "manager.hh"
 
-Dispatcher::Dispatcher() : mutex_(), clients_(), manager_() {}
+Dispatcher::Dispatcher() {}
 
 void Dispatcher::subscribe(std::weak_ptr<Client> client) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(client_mutex_);
   clients_.push_back(client);
 }
 
 void Dispatcher::subscribe(std::weak_ptr<Manager> manager) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(manager_mutex_);
   manager_ = manager;
 }
 
 void Dispatcher::on_update(std::string_view update) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(manager_mutex_);
   if (auto manager = manager_.lock()) {
     manager->on_update(update);
   }
@@ -24,7 +24,7 @@ void Dispatcher::on_update(std::string_view update) {
 void Dispatcher::do_update(std::string_view update) {
   std::vector<std::weak_ptr<Client>> v;
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(client_mutex_);
     v.reserve(clients_.size());
     for (auto it = clients_.begin(); it != clients_.end();) {
       if ((*it).expired()) {
