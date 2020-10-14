@@ -5,10 +5,14 @@ import {AppState} from './components/App/App';
  * Update the application's client-side global state.  Call via `dispatch`.
  */
 export default function reducer(state: AppState, action: Action): AppState {
-  if (action.type === 'update_channel') {
-    return update_channel(state, action.channel, action.value);
-  } else {
-    throw Error(`Action ${action.type} unrecognized!`);
+  console.log(action);
+  switch (action.type) {
+    case 'connection_success':
+      return {...state, connected: true};
+    case 'update_channel':
+      return update_channel(state, action.channel, action.value);
+    case 'update_channels':
+      return update_channels(state, action.values);
   }
 }
 
@@ -32,4 +36,11 @@ function update_channel(state: AppState, channel: number, value: number): AppSta
     ...state,
     faders,
   };
+}
+
+function update_channels(state: AppState, values: {channel: number, value: number}[]): AppState {
+  for (let value of values) {
+    state = update_channel(state, value.channel, value.value)
+  }
+  return state;
 }

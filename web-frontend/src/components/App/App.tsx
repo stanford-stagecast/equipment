@@ -1,7 +1,8 @@
-import React, {useReducer} from 'react';
+import React, {useReducer, useEffect, useRef, MutableRefObject} from 'react';
 import './App.css';
 import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
+import Server from '../../server';
 
 /**
  * The application's overall state.  Every piece of server-side state the application needs
@@ -9,6 +10,7 @@ import Fader, {FaderData} from '../Fader/Fader';
  * should probably be a union of "Loading", "Active", and "Error" states.
  */
 export type AppState = {
+  connected: boolean;
   faders: FaderData[];
 }
 
@@ -18,6 +20,7 @@ export type AppState = {
  * initial data.
  */
 export const initialState: AppState = {
+  connected: false,
   faders: [
     {channel: 0, value: 2},
     {channel: 1, value: 4},
@@ -37,22 +40,21 @@ export const initialState: AppState = {
 export default function App(_props: {}) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const server: MutableRefObject<Server | null> = useRef(null);
+  useEffect(() => {
+    server.current = new Server(dispatch);
+  }, []);
+
   return (
     <div className="App">
       <div className="FaderBank">
         {
-          state.faders.map((faderState: FaderData, i: number) => {
-            return <Fader key={i} data={faderState} dispatch={dispatch}/>
+          server.current === null
+          ? 'Loading...'
+          : state.faders.map((faderState: FaderData, i: number) => {
+            return <Fader key={i} data={faderState} dispatch={dispatch} server={server.current as Server}/>
           })
         }
-      </div>
-      <br/>
-      <div className="FaderBank">
-        {(() => {
-          return state.faders.map((faderState: FaderData, i: number) => {
-            return <Fader key={i} data={faderState} dispatch={dispatch}/>
-            })
-        })()}
       </div>
     </div>
   );

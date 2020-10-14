@@ -1,6 +1,7 @@
 import React, {Dispatch} from 'react';
 import Action from '../../action';
 import './Fader.css';
+import Server from '../../server';
 
 /**
  * The globally-saved state of a fader (anything which should be saved on the
@@ -17,15 +18,16 @@ export type FaderData = {
  * updated via `dispatch`.
  */
 type FaderProps = {
-  data: FaderData
+  data: FaderData;
   dispatch: Dispatch<Action>;
+  server: Server;
 }
 
 /**
  * Represents a basic one-channel input (e.g. a single channel's volume or a
  * single dimmer's intensity).
  */
-export default function Fader({data, dispatch}: FaderProps) {
+export default function Fader({data, dispatch, server}: FaderProps) {
   return (
     <div className="Fader">
       <p className="_text">
@@ -38,7 +40,7 @@ export default function Fader({data, dispatch}: FaderProps) {
         min="0"
         max="255"
         value={data.value}
-        onChange={(event) => fader_changed(event.target, data, dispatch)}/>
+        onChange={(event) => fader_changed(event.target, data, server, dispatch)}/>
     </div>
   );
 }
@@ -46,7 +48,7 @@ export default function Fader({data, dispatch}: FaderProps) {
 /**
  * A fader was moved; dispatch the appropriate events to update the state.
  */
-function fader_changed(target: HTMLInputElement, data: FaderData, dispatch: Dispatch<Action>) {
+function fader_changed(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
   /* We'd probably want:
    * update_channel_request (update local state)
    * send the data to the backend, then:
@@ -54,6 +56,7 @@ function fader_changed(target: HTMLInputElement, data: FaderData, dispatch: Disp
    * or:
    * update_channel_fail (alert the user of the failure).
    */
+  server.set_level(data.channel, parseInt(target.value));
   dispatch({
     type: 'update_channel',
     channel: data.channel,
