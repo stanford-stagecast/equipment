@@ -1,5 +1,5 @@
 import React, {Dispatch} from 'react';
-import Action from '../../action';
+import Action, {Channel} from '../../action';
 import './Fader.css';
 import Server from '../../server';
 
@@ -8,10 +8,7 @@ import Server from '../../server';
  * server or visible to other components).  Local-only state may be saved or
  * accessed via the `useState` hook instead.
  */
-export type FaderData = {
-  channel: number,
-  value: number,
-}
+export type FaderData = Channel;
 
 /**
  * Properties passed down from the parent into the fader.  These must be
@@ -30,8 +27,8 @@ type FaderProps = {
 export default function Fader({data, dispatch, server}: FaderProps) {
   return (
     <div className="Fader">
-      <p className="_text">
-        Fader {data.channel} is at {data.value} ({Math.round(data.value/255 * 100)}%).
+      <p className={"_text" + (data.status === 'changed' ? ' _changed' : '')}>
+        {Math.round(data.value/255 * 100)}
       </p>
       <br/>
       <input
@@ -59,7 +56,9 @@ function fader_changed(target: HTMLInputElement, data: FaderData, server: Server
   server.set_level(data.channel, parseInt(target.value));
   dispatch({
     type: 'update_channel',
-    channel: data.channel,
-    value: parseInt(target.value),
+    value: {
+      ...data,
+      value: parseInt(target.value),
+    }
   });
 }

@@ -1,14 +1,19 @@
 .Fader {
-	display: flex;
-	flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 ._fader {
-	width: 100px;
-	margin-top: 250px;
-	transform: rotate(270deg);
+  width: 100px;
+  margin-top: 25px;
+  transform: rotate(270deg);
 }
 
 ._text {
-	font-size: 8pt;
+  font-size: 24pt;
+  text-align: center;
+}
+
+._changed {
+  color: darkred;
 }

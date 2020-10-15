@@ -1,12 +1,11 @@
-.App {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-}
-
 .FaderBank {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
   margin-top: 100px;
+}
+
+.CueList {
+  margin-top: 100px;
+  display: block;
 }

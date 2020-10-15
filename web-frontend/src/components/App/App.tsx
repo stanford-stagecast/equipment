@@ -11,6 +11,8 @@ import Server from '../../server';
  */
 export type AppState = {
   connected: boolean;
+  cue: number,
+  cues: number[],
   faders: FaderData[];
 }
 
@@ -21,15 +23,17 @@ export type AppState = {
  */
 export const initialState: AppState = {
   connected: false,
+  cue: 0,
+  cues: [],
   faders: [
-    {channel: 0, value: 2},
-    {channel: 1, value: 4},
-    {channel: 2, value: 8},
-    {channel: 3, value: 16},
-    {channel: 4, value: 32},
-    {channel: 5, value: 64},
-    {channel: 6, value: 128},
-    {channel: 7, value: 255},
+    {channel: 0, value: 0, status: 'changed'},
+    {channel: 1, value: 0, status: 'changed'},
+    {channel: 2, value: 0, status: 'changed'},
+    {channel: 3, value: 0, status: 'changed'},
+    {channel: 4, value: 0, status: 'changed'},
+    {channel: 5, value: 0, status: 'changed'},
+    {channel: 6, value: 0, status: 'changed'},
+    {channel: 7, value: 0, status: 'changed'},
   ]
 }
 
@@ -45,15 +49,37 @@ export default function App(_props: {}) {
     server.current = new Server(dispatch);
   }, []);
 
+  if (server.current === null) {
+    return <div>"Loading..."</div>
+  }
+
   return (
     <div className="App">
       <div className="FaderBank">
         {
-          server.current === null
-          ? 'Loading...'
-          : state.faders.map((faderState: FaderData, i: number) => {
+          state.faders.map((faderState: FaderData, i: number) => {
             return <Fader key={i} data={faderState} dispatch={dispatch} server={server.current as Server}/>
           })
+        }
+      </div>
+      <br/>
+      <div className="CueList">
+        Current Cue: {state.cue}
+        <br/>
+        <button onClick={(event) => (server.current as Server).save_cue(state.cue)}>
+          Save as {state.cue} (Current)
+        </button>
+        <br/>
+        <button onClick={(event) => (server.current as Server).save_cue(state.cue + 1)}>
+          Save as {state.cue + 1} (Next)
+        </button>
+        <br/>
+        Cue List: {
+          state.cues ? state.cues.map((cue) => {
+            return <button onClick={(event) => (server.current as Server).restore_cue(cue)}>
+              {cue}
+            </button>;
+          }) : "No saved cues."
         }
       </div>
     </div>

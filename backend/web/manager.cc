@@ -15,8 +15,6 @@ static const std::string LIST_CUES = "list-cues";
 
 Manager::Manager(std::shared_ptr<Dispatcher> dispatcher)
   : dispatcher_(dispatcher) {
-    levels_[0] = 128;
-    levels_[1] = 255;
   }
 
 void Manager::begin() {

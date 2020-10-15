@@ -1,6 +1,5 @@
-import React, {Dispatch} from 'react';
+import {Dispatch} from 'react';
 import Action from './action';
-import {parse} from 'path';
 
 const SERVER_URL: string = 'ws://localhost:8000';
 
@@ -11,7 +10,7 @@ type GetLevels = {
     {
       'channel': string,
       'value': string,
-      'status': string,
+      'status': 'saved' | 'changed',
     }
   ]
 };
@@ -19,7 +18,7 @@ type GetLevels = {
 type ListCues = {
   type: 'list-cues',
   cue: string,
-  values: [
+  cues: [
     {
       'number': string,
     }
@@ -36,12 +35,14 @@ export default class Server {
     this.socket = new WebSocket(SERVER_URL);
     this.dispatch = dispatch;
     this.socket.onmessage = (evt) => this.onmessage(evt.data);
-    this.socket.onopen = (evt) => this.onopen();
+    this.socket.onopen = () => this.onopen();
   }
 
   private onopen() {
     this.dispatch({type: 'connection_success'});
     let data = {type: 'get-levels'};
+    this.socket.send(JSON.stringify(data));
+    data = {type: 'list-cues'};
     this.socket.send(JSON.stringify(data));
   }
 
@@ -49,19 +50,46 @@ export default class Server {
     let msg: Message = JSON.parse(data);
     switch (msg.type) {
       case 'get-levels':
-        this.dispatch({
-          type: 'update_channels',
-          values: msg.values.map((x) => {
-            return {
-              channel: parseInt(x.channel),
-              value: parseInt(x.value),
-            }
-          }),
-        });
+        this.get_levels(msg);
+        break;
+      case 'list-cues':
+        this.list_cues(msg);
         break;
       default:
         console.log("Unrecognized message type!");
     }
+  }
+
+  private get_levels(msg: GetLevels) {
+    let values = msg.values || [];
+    this.dispatch({
+      type: 'update_channels',
+      values: values.map((x) => {
+        return {
+          channel: parseInt(x.channel),
+          value: parseInt(x.value),
+          status: x.status,
+        }
+      }),
+    });
+    this.dispatch({
+      type: 'update_cue',
+      cue: parseInt(msg.cue),
+    });
+  }
+
+  private list_cues(msg: ListCues) {
+    let cues = msg.cues || [];
+    this.dispatch({
+      type: 'update_cue_list',
+      cues: cues.map((x) => {
+        return parseInt(x.number);
+      }),
+    });
+    this.dispatch({
+      type: 'update_cue',
+      cue: parseInt(msg.cue),
+    });
   }
 
   set_level(channel: number, value: number) {
@@ -75,6 +103,24 @@ export default class Server {
           value,
         }
       ]
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  save_cue(cue: number) {
+    cue = Math.floor(cue);
+    let data = {
+      type: 'save-cue',
+      cue: cue
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  restore_cue(cue: number) {
+    cue = Math.floor(cue);
+    let data = {
+      type: 'restore-cue',
+      cue: cue
     };
     this.socket.send(JSON.stringify(data));
   }
