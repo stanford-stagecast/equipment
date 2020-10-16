@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@types/webmidi": "^2.0.4",
+    "webmidi": "^2.5.1"
+  }
+}

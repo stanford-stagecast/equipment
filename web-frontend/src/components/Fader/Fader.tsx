@@ -2,6 +2,7 @@ import React, {Dispatch} from 'react';
 import Action, {Channel} from '../../action';
 import './Fader.css';
 import Server from '../../server';
+import WebMidi from 'webmidi';
 
 /**
  * The globally-saved state of a fader (anything which should be saved on the

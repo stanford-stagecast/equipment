@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "downlevelIteration": true,
+    "types": ["webmidi"],
     "lib": [
       "dom",
       "dom.iterable",

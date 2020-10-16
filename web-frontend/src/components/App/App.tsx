@@ -3,6 +3,8 @@ import './App.css';
 import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
 import Server from '../../server';
+import WebMidi from 'webmidi';
+
 
 /**
  * The application's overall state.  Every piece of server-side state the application needs
@@ -52,6 +54,24 @@ export default function App(_props: {}) {
   if (server.current === null) {
     return <div>"Loading..."</div>
   }
+
+  //midi_init();
+  WebMidi.enable(function(err) {
+    if (err) {
+      console.log('WebMidi is not supported');
+    } else {
+      console.log('WebMidi enabled');
+      navigator.requestMIDIAccess({sysex: true}).then(function(midi_access){
+        for (let input of midi_access.inputs.values()) {
+          input.onmidimessage = function(midi_message){
+            // state.faders[midi_message.data[1]].value = midi_message.data[2];
+            // console.log(state.faders[midi_message.data[1]]);
+            dispatch({type: 'update_channel', value: {channel: midi_message.data[1], value: 2 * midi_message.data[2], status: 'changed'}});;
+          };
+        }
+      });
+    }
+  });
 
   return (
     <div className="App">
