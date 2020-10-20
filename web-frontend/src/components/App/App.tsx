@@ -96,7 +96,7 @@ export default function App(_props: {}) {
         <br/>
         Cue List: {
           state.cues ? state.cues.map((cue) => {
-            return <button onClick={(event) => (server.current as Server).restore_cue(cue)}>
+            return <button key={cue} onClick={(event) => (server.current as Server).restore_cue(cue)}>
               {cue}
             </button>;
           }) : "No saved cues."
