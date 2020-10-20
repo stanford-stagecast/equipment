@@ -10,7 +10,7 @@ int main() {
   std::cout << "Listening at ws://localhost:8000..." << std::endl;
 
   std::shared_ptr<Dispatcher> dispatcher = std::make_shared<Dispatcher>();
-  std::shared_ptr<Manager> manager = std::make_shared<Manager>(dispatcher);
+  std::shared_ptr<Manager> manager = std::make_shared<Manager>(dispatcher, ioc);
   manager->begin();
 
   // we need a shared_ptr to exist for the listener to work

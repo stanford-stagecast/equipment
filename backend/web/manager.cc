@@ -13,8 +13,9 @@ static const std::string SAVE_CUE = "save-cue";
 static const std::string RESTORE_CUE = "restore-cue";
 static const std::string LIST_CUES = "list-cues";
 
-Manager::Manager(std::shared_ptr<Dispatcher> dispatcher)
-  : dispatcher_(dispatcher) {
+Manager::Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc)
+  : dispatcher_(dispatcher), ioc_(ioc), timer_(ioc_, net::chrono::milliseconds(25)) {
+    timer_.async_wait(boost::bind(&Manager::tick, this));
   }
 
 void Manager::begin() {
@@ -27,17 +28,22 @@ void Manager::get_levels() {
   CueList::cue_t levels = list_.levels();
   CueList::cue_t baseline = list_.baseline();
 
-  for (auto const& x: levels) {
+  for (size_t i = 0; i < levels.size(); i++) {
     json::ptree current;
-    int channel = x.first;
-    int value = x.second;
+    int channel = i;
+    int value = levels[i];
     current.put("channel", channel);
     current.put("value", value);
     std::string state = "changed";
-    if (!baseline.count(channel)) {
-      state = "new";
-    } else if (baseline[channel] == value) {
+    if (baseline[channel] == value) {
       state = "saved";
+    }
+    if (list_.is_fading()) {
+      if (baseline[channel] < value) {
+        state = "rising";
+      } else if (baseline[channel] > value) {
+        state = "falling";
+      }
     }
     current.put("status", state);
     values.push_back(std::make_pair("", current));
@@ -53,27 +59,34 @@ void Manager::get_levels() {
 }
 
 void Manager::set_levels(boost::property_tree::ptree values) {
-  CueList::cue_t data;
+  CueList::cue_t data(list_.levels());
   for (auto const& x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
     int value = node.get<int>("value");
     data[channel] = value;
   }
-  data.merge(list_.levels());
   list_.levels().swap(data);
   get_levels();
 }
 
 void Manager::save_cue(int q) {
-  list_.save_as(q);
+  list_.save_as(q, 3);
   list_cues();
   get_levels();
 }
 
+void Manager::tick() {
+  if (list_.is_fading()) {
+    list_.tick(25);
+    get_levels();
+  }
+  timer_.expires_at(timer_.expires_at() + net::chrono::milliseconds(25));
+  timer_.async_wait(boost::bind(&Manager::tick, this));
+}
+
 void Manager::restore_cue(int q) {
   list_.go_to(q);
-  get_levels();
 }
 
 void Manager::list_cues() {
