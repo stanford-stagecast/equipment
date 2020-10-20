@@ -24,19 +24,27 @@ void Manager::begin() {
 void Manager::get_levels() {
   json::ptree root;
   json::ptree values;
-  for (auto const& x: levels_) {
+  CueList::cue_t levels = list_.levels();
+  CueList::cue_t baseline = list_.baseline();
+
+  for (auto const& x: levels) {
     json::ptree current;
-    current.put("channel", x.first);
-    current.put("value", x.second);
-    bool changed = false;
-    if (!cues_.count(cue_) || cues_[cue_][x.first] != x.second) {
-      changed = true;
+    int channel = x.first;
+    int value = x.second;
+    current.put("channel", channel);
+    current.put("value", value);
+    std::string state = "changed";
+    if (!baseline.count(channel)) {
+      state = "new";
+    } else if (baseline[channel] == value) {
+      state = "saved";
     }
-    current.put("status", changed ? "changed" : "saved");
+    current.put("status", state);
     values.push_back(std::make_pair("", current));
   }
+  root.put("list", list_.number());
   root.put("type", GET_LEVELS);
-  root.put("cue", cue_);
+  root.put("cue", list_.cue());
   root.put_child("values", values);
 
   std::stringstream ss;
@@ -45,44 +53,39 @@ void Manager::get_levels() {
 }
 
 void Manager::set_levels(boost::property_tree::ptree values) {
-  std::queue<std::pair<int, int>> data;
+  CueList::cue_t data;
   for (auto const& x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
     int value = node.get<int>("value");
-    data.push(std::make_pair(channel, value));
+    data[channel] = value;
   }
-  while (!data.empty()) {
-    auto x = data.front();
-    levels_[x.first] = x.second;
-    data.pop();
-  }
+  data.merge(list_.levels());
+  list_.levels().swap(data);
   get_levels();
 }
 
 void Manager::save_cue(int q) {
-  cue_ = q;
-  cues_[q] = levels_;
+  list_.save_as(q);
   list_cues();
   get_levels();
 }
 
 void Manager::restore_cue(int q) {
-  cue_ = q;
-  levels_ = cues_[q];
+  list_.go_to(q);
   get_levels();
 }
 
 void Manager::list_cues() {
   json::ptree root;
   json::ptree cues;
-  for (auto const& x: cues_) {
+  for (int const& x: list_.cues()) {
     json::ptree current;
-    current.put("number", x.first);
+    current.put("number", x);
     cues.push_back(std::make_pair("", current));
   }
   root.put("type", LIST_CUES);
-  root.put("cue", cue_);
+  root.put("cue", list_.cue());
   root.put_child("cues", cues);
 
   std::stringstream ss;

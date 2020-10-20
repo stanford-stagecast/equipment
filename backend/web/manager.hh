@@ -5,14 +5,14 @@
 #include <map>
 #include <string_view>
 #include <boost/property_tree/ptree_fwd.hpp>
+
+#include "cuelist.hh"
 class Dispatcher;
 
 class Manager : public std::enable_shared_from_this<Manager> {
 private:
-  std::map<int, int> levels_{};
-  std::map<int, std::map<int, int>> cues_{};
   std::shared_ptr<Dispatcher> dispatcher_;
-  int cue_ = 0;
+  CueList list_{0, ""};
 
   void get_levels();
   void set_levels(boost::property_tree::ptree values);
