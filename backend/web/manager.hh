@@ -17,6 +17,7 @@ private:
   net::io_context& ioc_;
   CueList list_{0, ""};
   boost::asio::steady_timer timer_;
+  std::chrono::milliseconds tick_time_{};
 
   void set_levels(boost::property_tree::ptree values);
   void save_cue(unsigned q, float time);

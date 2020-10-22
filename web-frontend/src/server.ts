@@ -7,6 +7,7 @@ type GetLevels = {
   type: 'get-levels',
   cue: {
     'current': string,
+    'fade_time': string,
     'fade_progress': string,
     'fading': string,
     'last': string,
@@ -101,6 +102,7 @@ export default class Server {
       type: 'update_cue',
       cue: {
         current: parseInt(msg.cue.current),
+        fade_time: parseFloat(msg.cue.fade_time),
         fade_progress: parseFloat(msg.cue.fade_progress),
         fading: msg.cue.fading === "true",
         last: parseInt(msg.cue.last),

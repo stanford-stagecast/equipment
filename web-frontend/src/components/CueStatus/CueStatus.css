@@ -46,5 +46,12 @@
 ._recording {
   margin: 10px auto;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  line-height: 200%;
+}
+
+._recording input {
+  margin-left: 10px;
+  margin-bottom: 10px;
+  float: right;
 }

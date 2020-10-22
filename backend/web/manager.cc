@@ -23,6 +23,7 @@ static const std::string LIST_CUES = "list-cues";
 
 Manager::Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc)
   : dispatcher_(dispatcher), ioc_(ioc), timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)) {
+    tick_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     timer_.async_wait(boost::bind(&Manager::tick, this));
   }
 
@@ -62,6 +63,7 @@ void Manager::get_levels() {
 
   {
     cue_info.put("current", list_.cue());
+    cue_info.put("fade_time", list_.fade_time());
     cue_info.put("fade_progress", list_.fade_progress().value_or(1));
     cue_info.put("fading", list_.fade_progress().has_value());
     cue_info.put("last", list_.last_cue());
@@ -96,10 +98,12 @@ void Manager::save_cue(unsigned q, float time) {
 }
 
 void Manager::tick() {
+  std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
   if (list_.fade_progress()) {
-    list_.tick(CYCLE_TIME_MS);
+    list_.tick((now - tick_time_).count());
     get_levels();
   }
+  tick_time_ = now;
   timer_.expires_at(timer_.expires_at() + net::chrono::milliseconds(CYCLE_TIME_MS));
   timer_.async_wait(boost::bind(&Manager::tick, this));
 }

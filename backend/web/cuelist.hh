@@ -42,11 +42,11 @@ private:
   unsigned number_;
   std::string name_;
 
-  unsigned max_known_channel_{0};
+  unsigned max_known_channel_{7};
 
   bool is_fading_{false};
   float fade_time_left_{0};
-  float fade_time_total_{0};
+  float fade_time_total_{1};
   Cue::levels_t fade_source_{};
   unsigned last_cue_number_{0};
 
@@ -68,6 +68,8 @@ public:
   void record_cue(unsigned q, float time);
   void delete_cue(unsigned q);
   std::vector<cue_info_t> cue_info();
+
+  float fade_time();
 
   unsigned cue() { return current_cue_number_; }
   unsigned next_cue();

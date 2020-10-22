@@ -6,6 +6,7 @@ export type Channel = {
 
 export type CueStatusData = {
   current: number,
+  fade_time: number,
   fade_progress: number,
   fading: boolean,
   last: number,

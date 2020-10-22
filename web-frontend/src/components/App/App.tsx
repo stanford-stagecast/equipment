@@ -28,6 +28,7 @@ export const initialState: AppState = {
   connected: false,
   cue: {
     current: 0,
+    fade_time: 1,
     fade_progress: 1,
     fading: false,
     last: 0,
