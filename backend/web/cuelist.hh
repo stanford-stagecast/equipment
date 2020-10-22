@@ -50,7 +50,7 @@ private:
   Cue::levels_t fade_source_{};
   unsigned last_cue_number_{0};
 
-  Cue::level_t get_tracked_level_at(unsigned cue, Cue::channel_t channel);
+  Cue::level_t get_tracked_level_at(int cue, Cue::channel_t channel);
 
 public:
   CueList(unsigned number, std::string name);
