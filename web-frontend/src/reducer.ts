@@ -47,7 +47,7 @@ function update_channels(state: AppState, values: Channel[]): AppState {
   for (let channel of state.faders) {
     if (channels.indexOf(channel.channel) === -1) {
       channel.value = 0;
-      channel.status = "saved";
+      channel.status = "manual";
       new_faders.push(channel);
       channels.push(channel.channel);
     }

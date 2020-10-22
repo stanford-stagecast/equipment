@@ -7,6 +7,7 @@
   width: 100px;
   margin-top: 25px;
   transform: rotate(270deg);
+  margin-bottom: 50px;
 }
 
 ._text {
@@ -14,6 +15,22 @@
   text-align: center;
 }
 
-._changed {
+._manual {
   color: darkred;
+}
+
+._raised {
+  color: darkblue;
+}
+
+._lowered {
+  color: darkgreen;
+}
+
+._tracked {
+  color: grey;
+}
+
+._blocked {
+  color: black;
 }

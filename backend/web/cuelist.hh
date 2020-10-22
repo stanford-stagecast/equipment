@@ -4,43 +4,77 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "cue.hh"
 
 class CueList {
 public:
-  typedef std::vector<int> cue_t;
-  typedef std::map<int, cue_t> cuelist_t;
-  typedef std::map<int, float> fadelist_t;
+  typedef struct {
+    unsigned number;
+    float fade_time;
+  } cue_info_t;
 
-  CueList(int number, std::string name);
+  typedef enum {
+    MANUAL,
+    LOWERED,
+    RAISED,
+    TRACKED,
+    BLOCKED,
+  } cue_status_t;
 
-  int number();
-  std::string& name();
-
-  const int& cue();
-  cue_t& levels();
-  fadelist_t& fades();
-  const cue_t& baseline();
-  void save_as(int q, float time);
-  void go_to(int q);
-  std::vector<int> cues();
-  bool is_fading();
-
-  void tick(int ms);
+  typedef struct {
+    Cue::channel_t channel;
+    Cue::level_t level;
+    cue_status_t status;
+  } level_info_t;
 
 private:
-  int number_;
-  int cue_{0};
+  typedef enum {
+    DEFAULT,
+    FORCE_TRACK,
+    FORCE_BLOCK,
+  } tracking_state_t;
+
+  std::vector<std::optional<Cue>> cues_{};
+  unsigned current_cue_number_{0};
+
+  std::map<Cue::channel_t, Cue::level_t> level_overrides_{};
+
+  unsigned number_;
   std::string name_;
 
-  cue_t current_;
-  cue_t baseline_;
-
-  cuelist_t cues_{};
-  fadelist_t fades_{};
+  unsigned max_known_channel_{0};
 
   bool is_fading_{false};
   float fade_time_left_{0};
   float fade_time_total_{0};
+  Cue::levels_t fade_source_{};
+  unsigned last_cue_number_{0};
+
+  Cue::level_t get_tracked_level_at(unsigned cue, Cue::channel_t channel);
+
+public:
+  CueList(unsigned number, std::string name);
+
+  std::optional<float> fade_progress();
+  void tick(int ms);
+
+  std::vector<level_info_t> current_levels();
+  void set_level(Cue::channel_t channel, std::optional<Cue::level_t> level);
+  void track(Cue::channel_t channel);
+  void block(Cue::channel_t channel);
+  void back();
+  void go();
+  void go_to_cue(unsigned q);
+  void record_cue(unsigned q, float time);
+  void delete_cue(unsigned q);
+  std::vector<cue_info_t> cue_info();
+
+  unsigned cue() { return current_cue_number_; }
+  unsigned next_cue();
+  unsigned previous_cue();
+  unsigned last_cue() { return last_cue_number_; }
+  unsigned number() { return number_; }
+
 };
 
 #endif

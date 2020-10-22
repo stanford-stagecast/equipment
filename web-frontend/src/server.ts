@@ -5,12 +5,19 @@ const SERVER_URL: string = 'ws://localhost:8000';
 
 type GetLevels = {
   type: 'get-levels',
-  cue: string,
+  cue: {
+    'current': string,
+    'fade_progress': string,
+    'fading': string,
+    'last': string,
+    'next': string,
+    'previous': string,
+  },
   values: [
     {
       'channel': string,
       'value': string,
-      'status': 'saved' | 'changed',
+      status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
     }
   ]
 };
@@ -74,7 +81,14 @@ export default class Server {
     });
     this.dispatch({
       type: 'update_cue',
-      cue: parseInt(msg.cue),
+      cue: {
+        current: parseInt(msg.cue.current),
+        fade_progress: parseFloat(msg.cue.fade_progress),
+        fading: msg.cue.fading === "true",
+        last: parseInt(msg.cue.last),
+        next: parseInt(msg.cue.next),
+        previous: parseInt(msg.cue.previous),
+      }
     });
   }
 
@@ -86,10 +100,33 @@ export default class Server {
         return parseInt(x.number);
       }),
     });
-    this.dispatch({
-      type: 'update_cue',
-      cue: parseInt(msg.cue),
-    });
+  }
+
+  reset_channel(channel: number) {
+    channel = Math.floor(channel);
+    let data = {
+      type: 'reset-channel',
+      channel,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  block_channel(channel: number) {
+    channel = Math.floor(channel);
+    let data = {
+      type: 'block-channel',
+      channel,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  track_channel(channel: number) {
+    channel = Math.floor(channel);
+    let data = {
+      type: 'track-channel',
+      channel,
+    };
+    this.socket.send(JSON.stringify(data));
   }
 
   set_level(channel: number, value: number) {
@@ -107,11 +144,12 @@ export default class Server {
     this.socket.send(JSON.stringify(data));
   }
 
-  save_cue(cue: number) {
+  save_cue(cue: number, time: number) {
     cue = Math.floor(cue);
     let data = {
       type: 'save-cue',
-      cue: cue
+      cue,
+      time,
     };
     this.socket.send(JSON.stringify(data));
   }
@@ -120,7 +158,21 @@ export default class Server {
     cue = Math.floor(cue);
     let data = {
       type: 'restore-cue',
-      cue: cue
+      cue,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  go() {
+    let data = {
+      type: 'go-cue',
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  back() {
+    let data = {
+      type: 'back-cue',
     };
     this.socket.send(JSON.stringify(data));
   }

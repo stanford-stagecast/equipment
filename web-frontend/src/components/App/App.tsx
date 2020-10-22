@@ -4,6 +4,7 @@ import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
 import Server from '../../server';
 import WebMidi from 'webmidi';
+import CueStatus, {CueStatusData} from '../CueStatus/CueStatus';
 
 
 /**
@@ -13,7 +14,7 @@ import WebMidi from 'webmidi';
  */
 export type AppState = {
   connected: boolean;
-  cue: number,
+  cue: CueStatusData,
   cues: number[],
   faders: FaderData[];
 }
@@ -25,17 +26,24 @@ export type AppState = {
  */
 export const initialState: AppState = {
   connected: false,
-  cue: 0,
+  cue: {
+    current: 0,
+    fade_progress: 1,
+    fading: false,
+    last: 0,
+    next: 0,
+    previous: 0,
+  },
   cues: [],
   faders: [
-    {channel: 0, value: 0, status: 'changed'},
-    {channel: 1, value: 0, status: 'changed'},
-    {channel: 2, value: 0, status: 'changed'},
-    {channel: 3, value: 0, status: 'changed'},
-    {channel: 4, value: 0, status: 'changed'},
-    {channel: 5, value: 0, status: 'changed'},
-    {channel: 6, value: 0, status: 'changed'},
-    {channel: 7, value: 0, status: 'changed'},
+    {channel: 0, value: 0, status: 'manual'},
+    {channel: 1, value: 0, status: 'manual'},
+    {channel: 2, value: 0, status: 'manual'},
+    {channel: 3, value: 0, status: 'manual'},
+    {channel: 4, value: 0, status: 'manual'},
+    {channel: 5, value: 0, status: 'manual'},
+    {channel: 6, value: 0, status: 'manual'},
+    {channel: 7, value: 0, status: 'manual'},
   ]
 }
 
@@ -52,7 +60,7 @@ export default function App(_props: {}) {
   }, []);
 
   if (server.current === null) {
-    return <div>"Loading..."</div>
+    return <div>Loading...</div>
   }
 
   //midi_init();
@@ -66,42 +74,26 @@ export default function App(_props: {}) {
           input.onmidimessage = function(midi_message){
             // state.faders[midi_message.data[1]].value = midi_message.data[2];
             // console.log(state.faders[midi_message.data[1]]);
-            dispatch({type: 'update_channel', value: {channel: midi_message.data[1], value: 2 * midi_message.data[2], status: 'changed'}});;
+            dispatch({type: 'update_channel', value: {channel: midi_message.data[1], value: 2 * midi_message.data[2], status: 'manual'}});;
           };
         }
       });
     }
   });
 
+  const state_modified = state.faders.reduce((prev, current) => prev || current.status === "manual", false);
+
   return (
     <div className="App">
       <div className="FaderBank">
         {
           state.faders.map((faderState: FaderData, i: number) => {
-            return <Fader key={i} data={faderState} dispatch={dispatch} server={server.current as Server}/>
+            return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
           })
         }
       </div>
       <br/>
-      <div className="CueList">
-        Current Cue: {state.cue}
-        <br/>
-        <button onClick={(event) => (server.current as Server).save_cue(state.cue)}>
-          Save as {state.cue} (Current)
-        </button>
-        <br/>
-        <button onClick={(event) => (server.current as Server).save_cue(state.cue + 1)}>
-          Save as {state.cue + 1} (Next)
-        </button>
-        <br/>
-        Cue List: {
-          state.cues ? state.cues.map((cue) => {
-            return <button key={cue} onClick={(event) => (server.current as Server).restore_cue(cue)}>
-              {cue}
-            </button>;
-          }) : "No saved cues."
-        }
-      </div>
+      <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
     </div>
   );
 }

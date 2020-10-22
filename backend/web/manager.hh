@@ -19,9 +19,17 @@ private:
   boost::asio::steady_timer timer_;
 
   void set_levels(boost::property_tree::ptree values);
-  void save_cue(int q);
-  void restore_cue(int q);
+  void save_cue(unsigned q, float time);
+  void restore_cue(unsigned q);
+  void delete_cue(unsigned q);
   void list_cues();
+  void go_cue();
+  void back_cue();
+
+  void reset_channel(unsigned channel);
+  void track_channel(unsigned channel);
+  void block_channel(unsigned channel);
+
 public:
   Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc);
 

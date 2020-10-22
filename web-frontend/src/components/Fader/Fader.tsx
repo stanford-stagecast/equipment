@@ -2,7 +2,6 @@ import React, {Dispatch} from 'react';
 import Action, {Channel} from '../../action';
 import './Fader.css';
 import Server from '../../server';
-import WebMidi from 'webmidi';
 
 /**
  * The globally-saved state of a fader (anything which should be saved on the
@@ -16,6 +15,7 @@ export type FaderData = Channel;
  * updated via `dispatch`.
  */
 type FaderProps = {
+  state_modified: boolean;
   data: FaderData;
   dispatch: Dispatch<Action>;
   server: Server;
@@ -25,10 +25,10 @@ type FaderProps = {
  * Represents a basic one-channel input (e.g. a single channel's volume or a
  * single dimmer's intensity).
  */
-export default function Fader({data, dispatch, server}: FaderProps) {
+export default function Fader({state_modified, data, dispatch, server}: FaderProps) {
   return (
     <div className="Fader">
-      <p className={"_text" + (data.status === 'changed' ? ' _changed' : '')}>
+      <p className={"_text _" + data.status}>
         {Math.round(data.value/255 * 100)}
       </p>
       <br/>
@@ -39,6 +39,21 @@ export default function Fader({data, dispatch, server}: FaderProps) {
         max="255"
         value={data.value}
         onChange={(event) => fader_changed(event.target, data, server, dispatch)}/>
+      <button
+        disabled={data.status !== "manual"}
+        onClick={() => server.reset_channel(data.channel)}>
+        Reset
+      </button>
+      <button
+        disabled={state_modified || data.status === "tracked"}
+        onClick={() => server.track_channel(data.channel)}>
+        Track
+      </button>
+      <button
+        disabled={state_modified || data.status !== "tracked"}
+        onClick={() => server.block_channel(data.channel)}>
+        Block
+      </button>
     </div>
   );
 }
