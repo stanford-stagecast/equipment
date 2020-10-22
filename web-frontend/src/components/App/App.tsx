@@ -61,6 +61,8 @@ export default function App(_props: {}) {
 
   if (server.current === null) {
     return <div>Loading...</div>
+  } else if (!state.connected) {
+    return <div>Connecting...</div>
   }
 
   //midi_init();
@@ -87,7 +89,7 @@ export default function App(_props: {}) {
     <div className="App">
       <div className="FaderBank">
         {
-          state.faders.map((faderState: FaderData, i: number) => {
+          state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
             return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
           })
         }

@@ -6,8 +6,8 @@ import {AppState} from './components/App/App';
  */
 export default function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'connection_success':
-      return {...state, connected: true};
+    case 'connection_change':
+      return {...state, connected: action.status};
     case 'update_cue':
       return {...state, cue: action.cue};
     case 'update_cue_list':
