@@ -4,11 +4,13 @@
 #include <memory>
 #include <map>
 #include <string_view>
-#include <boost/property_tree/ptree_fwd.hpp>
 
+#include <boost/property_tree/ptree_fwd.hpp>
 #include "net.hh"
 
 #include "cuelist.hh"
+#include "transmitter.hh"
+
 class Dispatcher;
 
 class Manager : public std::enable_shared_from_this<Manager> {
@@ -18,6 +20,7 @@ private:
   CueList list_{0, ""};
   boost::asio::steady_timer timer_;
   std::chrono::milliseconds tick_time_{};
+  Transmitter transmitter_;
 
   void set_levels(boost::property_tree::ptree values);
   void save_cue(unsigned q, float time);
