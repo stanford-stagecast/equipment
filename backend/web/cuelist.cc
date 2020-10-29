@@ -1,7 +1,7 @@
 #include "cuelist.hh"
 
 CueList::CueList(unsigned number, std::string name)
-    : number_(number), name_(name) {}
+  : number_(number), name_(name) {}
 
 std::vector<CueList::level_info_t> CueList::current_levels() {
   std::vector<level_info_t> levels;
@@ -129,16 +129,7 @@ void CueList::record_cue(unsigned q, float time) {
   for (auto const &x : info) {
     unsigned channel = x.channel;
     int level = x.level;
-    if (level != get_tracked_level_at(q - 1, channel)) {
-      new_cue.set_level(channel, level);
-    }
-  }
-
-  for (auto const &x : level_overrides_) {
-    unsigned channel = x.first;
-    int level = x.second;
-    new_cue.set_level(channel, level);
-    if (level != get_tracked_level_at(q - 1, channel)) {
+    if ((q == current_cue_number_ && x.status == BLOCKED) || level != get_tracked_level_at(q - 1, channel)) {
       new_cue.set_level(channel, level);
     }
   }
@@ -194,10 +185,17 @@ std::optional<float> CueList::fade_progress() {
   return 1 - (fade_time_left_ / fade_time_total_);
 }
 
-Cue::level_t CueList::get_tracked_level_at(unsigned cue,
+float CueList::fade_time() {
+  return fade_time_total_;
+}
+
+Cue::level_t CueList::get_tracked_level_at(int cue,
                                            Cue::channel_t channel) {
+  if (cue < 0) {
+    return 0;
+  }
   int current_cue = cue;
-  if (cue >= cues_.size()) {
+  if (static_cast<unsigned>(cue) >= cues_.size()) {
     current_cue = cues_.size() - 1;
   }
   while (current_cue >= 0) {

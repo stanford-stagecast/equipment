@@ -22,14 +22,15 @@ type CueStatusProps = {
 export default function CueStatus({data, dispatch, server}: CueStatusProps) {
   let [cue_number, set_cue_number] = useState(data.current);
   let [saved_cue_number, set_saved_cue_number] = useState(data.current);
+  let [cue_time, set_cue_time] = useState(data.fade_time);
 
   useEffect(() => {
     if (data.current !== saved_cue_number) {
       set_saved_cue_number(data.current);
       set_cue_number(data.current);
+      set_cue_time(data.fade_time);
     }
   }, [data, saved_cue_number]);
-
 
   return (
     <div className="CueStatus">
@@ -51,8 +52,15 @@ export default function CueStatus({data, dispatch, server}: CueStatusProps) {
           Go!
         </button>
         <div className="_recording">
-          <input type="number" value={cue_number} onChange={(evt) => set_cue_number(parseInt(evt.target.value))}/>
-          <button className="_record" onClick={() => server.save_cue(cue_number, 1)}>
+          <label>
+            Cue:
+            <input type="number" value={cue_number} onChange={(evt) => set_cue_number(parseInt(evt.target.value) || 0)}/>
+          </label>
+          <label>
+            Time:
+            <input type="number" value={cue_time} onChange={(evt) => set_cue_time(parseFloat(evt.target.value) || 0)}/>
+          </label>
+          <button className="_record" onClick={() => server.save_cue(cue_number, cue_time)}>
             Record
           </button>
         </div>

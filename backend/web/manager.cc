@@ -1,8 +1,8 @@
-#include "dispatcher.hh"
 #include "manager.hh"
-#include <iostream>
-#include <boost/property_tree/ptree.hpp>
+#include "dispatcher.hh"
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
 #include <queue>
 
 static const unsigned CYCLE_TIME_MS = 25;
@@ -21,27 +21,29 @@ static const std::string BACK_CUE = "back-cue";
 static const std::string DELETE_CUE = "delete-cue";
 static const std::string LIST_CUES = "list-cues";
 
-Manager::Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc)
-  : dispatcher_(dispatcher), ioc_(ioc), timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)) {
-    timer_.async_wait(boost::bind(&Manager::tick, this));
-  }
-
-void Manager::begin() {
-  dispatcher_->subscribe(weak_from_this());
+Manager::Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context &ioc)
+    : dispatcher_(dispatcher), ioc_(ioc),
+      timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)),
+      transmitter_(ioc, net::ip::make_address("127.0.0.1"), 0) {
+  tick_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
+  timer_.async_wait(boost::bind(&Manager::tick, this));
 }
+
+void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 
 std::string status_message(CueList::cue_status_t status) {
   switch (status) {
-    case(CueList::MANUAL):
-      return "manual";
-    case(CueList::LOWERED):
-      return "lowered";
-    case(CueList::RAISED):
-      return "raised";
-    case(CueList::TRACKED):
-      return "tracked";
-    case(CueList::BLOCKED):
-      return "blocked";
+  case (CueList::MANUAL):
+    return "manual";
+  case (CueList::LOWERED):
+    return "lowered";
+  case (CueList::RAISED):
+    return "raised";
+  case (CueList::TRACKED):
+    return "tracked";
+  case (CueList::BLOCKED):
+    return "blocked";
   }
   std::cerr << "Unknown status: " << status << std::endl;
   return "unknown";
@@ -52,16 +54,22 @@ void Manager::get_levels() {
   json::ptree values;
   json::ptree cue_info;
 
+  Transmitter::universe_t universe = { 0 };
+
   for (auto info : list_.current_levels()) {
     json::ptree current;
     current.put("channel", info.channel);
     current.put("value", info.level);
     current.put("status", status_message(info.status));
+    if (info.channel < 512) {
+      universe[info.channel] = std::clamp(info.level, 0, 255);
+    }
     values.push_back(std::make_pair("", current));
   }
 
   {
     cue_info.put("current", list_.cue());
+    cue_info.put("fade_time", list_.fade_time());
     cue_info.put("fade_progress", list_.fade_progress().value_or(1));
     cue_info.put("fading", list_.fade_progress().has_value());
     cue_info.put("last", list_.last_cue());
@@ -76,11 +84,12 @@ void Manager::get_levels() {
 
   std::stringstream ss;
   json::write_json(ss, root);
+  transmitter_.update(universe);
   dispatcher_->do_update(std::string_view(ss.str()));
 }
 
 void Manager::set_levels(boost::property_tree::ptree values) {
-  for (auto const& x : values) {
+  for (auto const &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
     int value = node.get<int>("value");
@@ -96,11 +105,16 @@ void Manager::save_cue(unsigned q, float time) {
 }
 
 void Manager::tick() {
+  std::chrono::milliseconds now =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
   if (list_.fade_progress()) {
-    list_.tick(CYCLE_TIME_MS);
+    list_.tick((now - tick_time_).count());
     get_levels();
   }
-  timer_.expires_at(timer_.expires_at() + net::chrono::milliseconds(CYCLE_TIME_MS));
+  tick_time_ = now;
+  timer_.expires_at(timer_.expires_at() +
+                    net::chrono::milliseconds(CYCLE_TIME_MS));
   timer_.async_wait(boost::bind(&Manager::tick, this));
 }
 
@@ -143,7 +157,7 @@ void Manager::delete_cue(unsigned q) {
 void Manager::list_cues() {
   json::ptree root;
   json::ptree cues;
-  for (auto const& x : list_.cue_info()) {
+  for (auto const &x : list_.cue_info()) {
     json::ptree current;
     current.put("number", x.number);
     current.put("time", x.fade_time);
@@ -191,13 +205,13 @@ void Manager::on_update(std::string_view update) {
     } else {
       std::cerr << "Invalid type: " << type << std::endl;
     }
-  } catch (json::json_parser::json_parser_error& e) {
+  } catch (json::json_parser::json_parser_error &e) {
     std::cerr << "Ignoring invalid JSON. [" << e.what() << "]" << std::endl;
     return;
-  } catch (json::ptree_bad_path& e) {
+  } catch (json::ptree_bad_path &e) {
     std::cerr << "Ignoring incomplete JSON. [" << e.what() << "]" << std::endl;
     return;
-  } catch (json::ptree_bad_data& e) {
+  } catch (json::ptree_bad_data &e) {
     std::cerr << "Ignoring unparsable JSON. [" << e.what() << "]" << std::endl;
     return;
   }

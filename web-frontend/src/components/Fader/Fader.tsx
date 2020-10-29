@@ -29,7 +29,7 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
   return (
     <div className="Fader">
       <p className={"_text _" + data.status}>
-        {Math.round(data.value/255 * 100)}
+        {data.channel}: {Math.round(data.value/255 * 100)}
       </p>
       <br/>
       <input
@@ -62,13 +62,6 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
  * A fader was moved; dispatch the appropriate events to update the state.
  */
 function fader_changed(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
-  /* We'd probably want:
-   * update_channel_request (update local state)
-   * send the data to the backend, then:
-   * update_channel_success (sync the local state)
-   * or:
-   * update_channel_fail (alert the user of the failure).
-   */
   server.set_level(data.channel, parseInt(target.value));
   dispatch({
     type: 'update_channel',

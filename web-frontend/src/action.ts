@@ -6,6 +6,7 @@ export type Channel = {
 
 export type CueStatusData = {
   current: number,
+  fade_time: number,
   fade_progress: number,
   fading: boolean,
   last: number,
@@ -14,7 +15,7 @@ export type CueStatusData = {
 };
 
 type Action =
-  | { type: 'connection_success' }
+  | { type: 'connection_change', status: boolean }
   | { type: 'update_cue', cue: CueStatusData }
   | { type: 'update_cue_list', cues: number[] }
   | { type: 'update_channel', value: Channel}

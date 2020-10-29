@@ -7,6 +7,7 @@ type GetLevels = {
   type: 'get-levels',
   cue: {
     'current': string,
+    'fade_time': string,
     'fade_progress': string,
     'fading': string,
     'last': string,
@@ -39,14 +40,32 @@ export default class Server {
   dispatch: Dispatch<Action>;
 
   constructor(dispatch: Dispatch<Action>) {
-    this.socket = new WebSocket(SERVER_URL);
     this.dispatch = dispatch;
-    this.socket.onmessage = (evt) => this.onmessage(evt.data);
-    this.socket.onopen = () => this.onopen();
+    this.socket = this.connect();
+  }
+
+  private connect() {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      return this.socket;
+    }
+    let socket = new WebSocket(SERVER_URL);
+    socket.onmessage = (evt) => this.onmessage(evt.data);
+    socket.onopen = () => this.onopen();
+    socket.onclose = () => {
+      this.dispatch({type: 'connection_change', status: false});
+      setTimeout(() => {
+        this.socket = this.connect();
+      }, 1000);
+    }
+    socket.onerror = () => {
+      socket.close();
+    }
+    this.socket = socket;
+    return socket;
   }
 
   private onopen() {
-    this.dispatch({type: 'connection_success'});
+    this.dispatch({type: 'connection_change', status: true});
     let data = {type: 'get-levels'};
     this.socket.send(JSON.stringify(data));
     data = {type: 'list-cues'};
@@ -83,6 +102,7 @@ export default class Server {
       type: 'update_cue',
       cue: {
         current: parseInt(msg.cue.current),
+        fade_time: parseFloat(msg.cue.fade_time),
         fade_progress: parseFloat(msg.cue.fade_progress),
         fading: msg.cue.fading === "true",
         last: parseInt(msg.cue.last),
