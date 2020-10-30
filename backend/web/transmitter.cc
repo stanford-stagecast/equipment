@@ -4,7 +4,7 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/bind.hpp>
 
-#define RETX_TIME_MS 20
+#define RETX_TIME_MS 1000
 #define ARTNET_PORT 0x1936
 
 Transmitter::Transmitter(net::io_context &context, net::ip::address destination,
