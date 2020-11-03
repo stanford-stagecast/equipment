@@ -21,6 +21,9 @@ message(STATUS "Boost Version: ${Boost_VERSION}")
 # Web Backend
 add_subdirectory(web)
 
+# Mixer
+add_subdirectory(mixer)
+
 # Tests
 add_subdirectory(tests)
 include(tests.cmake)
