@@ -31,13 +31,12 @@ inline std::ostream& operator<<(std::ostream& os, WavHeader& header) {
 
 class Mixer {
   private:
-	std::ifstream file1;
-	std::ifstream file2;
+	std::vector<std::ifstream> files_{};
 
 	WavHeader read_wav_header(std::ifstream& file);
 
   public:
-	Mixer(const std::string name1, const std::string name2);
+	Mixer(std::vector<std::string> filenames);
 	~Mixer();
 };
 
