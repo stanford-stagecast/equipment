@@ -15,14 +15,14 @@ Mixer::Mixer(const string name1, const string name2)
 	read_wav_header(file2);
 	of << header1;
 
-	uint16_t sample1;
-	uint16_t sample2;
+	int16_t sample1;
+	int16_t sample2;
 	char tmp[2];
 	while (file1.read(tmp, sizeof(tmp))) {
-		sample1 = *reinterpret_cast<uint16_t*>(&tmp);
+		sample1 = *reinterpret_cast<int16_t*>(&tmp);
 		file2.read(tmp, sizeof(tmp));
-		sample2 = *reinterpret_cast<uint16_t*>(&tmp);
-		sample1 += sample2;
+		sample2 = *reinterpret_cast<int16_t*>(&tmp);
+		sample1 = sample1 / 2 + sample2 / 2;
 		of.write(reinterpret_cast<char*>(&sample1), sizeof(tmp));
 	}
 }
