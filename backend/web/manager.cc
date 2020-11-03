@@ -108,10 +108,11 @@ void Manager::tick() {
   std::chrono::milliseconds now =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  if (list_.fade_progress()) {
+  if (list_.fade_progress().has_value()) {
     list_.tick((now - tick_time_).count());
     get_levels();
   }
+  transmitter_.tick((now - tick_time_).count());
   tick_time_ = now;
   timer_.expires_at(timer_.expires_at() +
                     net::chrono::milliseconds(CYCLE_TIME_MS));
