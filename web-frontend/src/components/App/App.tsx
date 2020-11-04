@@ -3,8 +3,8 @@ import './App.css';
 import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
 import Server from '../../server';
-import WebMidi from 'webmidi';
 import CueStatus, {CueStatusData} from '../CueStatus/CueStatus';
+import Controller from '../../controller';
 
 
 /**
@@ -56,8 +56,10 @@ export default function App(_props: {}) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const server: MutableRefObject<Server | null> = useRef(null);
+  const controller: MutableRefObject<Controller | null> = useRef(null);
   useEffect(() => {
     server.current = new Server(dispatch);
+    controller.current = new Controller(initialState, dispatch, server.current as Server);
   }, []);
 
   if (server.current === null) {
@@ -65,24 +67,8 @@ export default function App(_props: {}) {
   } else if (!state.connected) {
     return <div>Connecting...</div>
   }
+  controller.current?.update_state(state);
 
-  //midi_init();
-  WebMidi.enable(function(err) {
-    if (err) {
-      console.log('WebMidi is not supported');
-    } else {
-      console.log('WebMidi enabled');
-      navigator.requestMIDIAccess({sysex: true}).then(function(midi_access){
-        for (let input of midi_access.inputs.values()) {
-          input.onmidimessage = function(midi_message){
-            // state.faders[midi_message.data[1]].value = midi_message.data[2];
-            // console.log(state.faders[midi_message.data[1]]);
-            dispatch({type: 'update_channel', value: {channel: midi_message.data[1], value: 2 * midi_message.data[2], status: 'manual'}});;
-          };
-        }
-      });
-    }
-  });
 
   const state_modified = state.faders.reduce((prev, current) => prev || current.status === "manual", false);
 
