@@ -6,23 +6,22 @@
 #include <vector>
 #include <string>
 #include <cstdint>
-#include <cassert>
 
-#include "wav_header.hh"
-
-inline std::ostream& operator<<(std::ostream& os, WavHeader& header) {
-	os.write(reinterpret_cast<char*>(&header), sizeof(header));
-	return os;
-}
+#include "levels.hh"
 
 class Mixer {
   private:
 	std::vector<std::ifstream> files_{};
 
-	WavHeader read_wav_header(std::ifstream& file);
+	// right audio channel
+	std::ofstream r_out_{"right.out"};
+
+	// left audio channel
+	std::ofstream l_out_{"left.out"};
 
   public:
 	Mixer(std::vector<std::string> filenames);
+	void mix(std::vector<Level> levels);
 	~Mixer();
 };
 

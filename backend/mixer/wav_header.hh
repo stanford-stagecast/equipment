@@ -1,6 +1,9 @@
 #ifndef WAV_HEADER_HH
 #define WAV_HEADER_HH
 
+#include <iostream>
+#include <fstream>
+
 struct __attribute__ ((packed)) WavHeader {
 	char riff[4];			// Always 'RIFF'
 	uint32_t file_size{};		// size of file
@@ -16,5 +19,16 @@ struct __attribute__ ((packed)) WavHeader {
 	char data[4];			// Always 'data'
 	uint32_t data_size{};		// number of bytes in the data
 };
+
+inline std::ostream& operator<<(std::ostream& os, WavHeader& header) {
+	os.write(reinterpret_cast<char*>(&header), sizeof(header));
+	return os;
+}
+
+WavHeader read_wav_header(std::ifstream& file) {
+	WavHeader header;
+	file.read(reinterpret_cast<char*>(&header), sizeof(header));
+	return header;
+}
 
 #endif
