@@ -9,9 +9,12 @@
 
 #include "levels.hh"
 
+// Ensures that floats are 32 bits long.
+static_assert(sizeof(float) == 4);
+
 class Mixer {
   private:
-	std::vector<std::ifstream> files_{};
+	std::vector<std::ifstream> streams_{};
 
 	// right audio channel
 	std::ofstream r_out_{"right.out"};
