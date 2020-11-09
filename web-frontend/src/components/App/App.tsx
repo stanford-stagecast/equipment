@@ -1,4 +1,4 @@
-import React, {useReducer, useEffect, useRef, MutableRefObject} from 'react';
+import React, {useState, useReducer, useEffect, useRef, MutableRefObject} from 'react';
 import './App.css';
 import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
@@ -54,6 +54,7 @@ export const initialState: AppState = {
  */
 export default function App(_props: {}) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  let [audioMode, setAudioMode] = useState(true);
 
   const server: MutableRefObject<Server | null> = useRef(null);
   const controller: MutableRefObject<Controller | null> = useRef(null);
@@ -74,15 +75,58 @@ export default function App(_props: {}) {
 
   return (
     <div className="App">
-      <div className="FaderBank">
-        {
-          state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
-            return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
-          })
-        }
+      <div className="controls">
+        <label>
+          Audio Mode:
+          <input type="checkbox" checked={audioMode} onChange={(e) => setAudioMode(e.target.checked)}/>
+        </label>
       </div>
-      <br/>
-      <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
+      {
+        !audioMode ?
+        <>
+          <div className="FaderBank">
+            {
+              state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
+                return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
+                })
+            }
+          </div>
+          <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
+        </>
+        : <>
+          <div className="ChannelList">
+            {
+              (() => {
+                let n = state.faders.reduce((prev, curr) => curr.channel >= prev ? curr.channel : prev, 0);
+                n = Math.ceil((n+1) / 16) * 16;
+                const columns = 8;
+                const rows = n / 16;
+                let data = new Array(n).fill(0);
+                for (let channel of state.faders) {
+                  data[channel.channel] = channel.value;
+                }
+                let row_output = [];
+                for (let row = 0; row < rows; row++) {
+                  let column_output = [];
+                  for (let column = 0; column < columns; column++) {
+                    let level_index = row * 16 + column;
+                    let pan_index = row * 16 + column + 8;
+                    let level = data[level_index];
+                    let pan = data[pan_index];
+                    column_output.push(<span key={column} className="channel">
+                      {row}.{level_index % 16}
+                      <br/>
+                      <progress className="pan" value={pan} max="255"></progress>
+                      <progress className="intensity" value={level} max="255"></progress>
+                    </span>);
+                  }
+                  row_output.push(<div key={row} data-row={row} className="row">{column_output}</div>);
+                }
+                return row_output;
+              })()
+            }
+          </div>
+        </> }
     </div>
   );
 }

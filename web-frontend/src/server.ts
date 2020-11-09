@@ -38,6 +38,7 @@ type Message = GetLevels | ListCues;
 export default class Server {
   socket: WebSocket;
   dispatch: Dispatch<Action>;
+  disconnect_timeout?: number;
 
   constructor(dispatch: Dispatch<Action>) {
     this.dispatch = dispatch;
@@ -51,11 +52,16 @@ export default class Server {
     let socket = new WebSocket(SERVER_URL);
     socket.onmessage = (evt) => this.onmessage(evt.data);
     socket.onopen = () => this.onopen();
-    socket.onclose = () => {
-      this.dispatch({type: 'connection_change', status: false});
+    socket.onclose = (e) => {
+      console.log(e);
+      if (this.disconnect_timeout === undefined) {
+        this.disconnect_timeout = window.setTimeout(() => {
+          this.dispatch({type: 'connection_change', status: false});
+        }, 1000);
+      }
       setTimeout(() => {
         this.socket = this.connect();
-      }, 1000);
+      }, 100);
     }
     socket.onerror = () => {
       socket.close();
@@ -65,6 +71,8 @@ export default class Server {
   }
 
   private onopen() {
+    window.clearTimeout(this.disconnect_timeout);
+    this.disconnect_timeout = undefined;
     this.dispatch({type: 'connection_change', status: true});
     let data = {type: 'get-levels'};
     this.socket.send(JSON.stringify(data));
@@ -73,16 +81,20 @@ export default class Server {
   }
 
   private onmessage(data: string) {
-    let msg: Message = JSON.parse(data);
-    switch (msg.type) {
-      case 'get-levels':
-        this.get_levels(msg);
-        break;
-      case 'list-cues':
-        this.list_cues(msg);
-        break;
-      default:
-        console.log("Unrecognized message type!");
+    try {
+      let msg: Message = JSON.parse(data);
+      switch (msg.type) {
+        case 'get-levels':
+          this.get_levels(msg);
+          break;
+        case 'list-cues':
+          this.list_cues(msg);
+          break;
+        default:
+          console.log("Unrecognized message type!");
+      }
+    } catch {
+      console.error("Error while deserializing!");
     }
   }
 

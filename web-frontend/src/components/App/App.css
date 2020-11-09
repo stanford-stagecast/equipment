@@ -4,3 +4,34 @@
   justify-content: space-evenly;
   margin-top: 100px;
 }
+
+.controls {
+  margin: 10px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  border: 1px solid black;
+  border-radius: 10px;
+  margin: 25px;
+}
+
+.channel {
+  height: 150px;
+  width: 100px;
+  display: inline-block;
+  text-align: center;
+  border: 1px dashed lightgrey;
+  border-radius: 10px;
+}
+
+.pan {
+  width: 75px;
+}
+
+.intensity {
+  transform: rotate(270deg) translateX(-50px);
+  width: 75px;
+}
