@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 
 #include <boost/beast.hpp>
 #include <boost/asio.hpp>
@@ -61,24 +64,57 @@ void open_midi(ifstream& midi, string device) {
   cout << "MIDI controller connected!" << endl;
 }
 
-int main(int argc, char **argv) {
-  validate_arguments(argc);
+map<uint8_t, uint8_t> changes{};
+mutex changes_mutex;
+condition_variable ws_signal;
 
-  string device = argv[1];
-  string server_name = argv[2];
-  string port = argv[3];
-  int user = stoi(argv[4]);
-  cout << "Using MIDI device: <" << device << ">" << endl;
-  cout << "Using server: <" << server_name << ":" << port << ">" << endl;
-  cout << "Using user: <" << user << ">" << endl;
-
+void ws_thread(string server_name, string port) {
   net::io_context ioc;
   stream<tcp::socket> ws(ioc);
   open_websocket(ioc, ws, server_name, port);
+
+  // whenever changes are available, 
+  while (true) {
+    map<uint8_t, uint8_t> local;
+    {
+      unique_lock<mutex> lock(changes_mutex);
+      if (changes.size() == 0) {
+        ws_signal.wait(lock);
+      }
+      local = changes;
+      changes.clear();
+    }
+
+    if (local.size() == 0) {
+      continue;
+    }
+    pt::ptree json;
+    json.put("type", "set-levels");
+    pt::ptree array;
+    for (auto x : local) {
+      pt::ptree current;
+      current.put("channel", x.first);
+      current.put("value", x.second);
+      array.push_back(std::make_pair("", current));
+    }
+    json.put_child("values", array);
+    stringstream ss;
+    pt::write_json(ss, json);
+    string s = ss.str();
+    ws.write(net::buffer(s));
+
+    // only one update every 10ms
+    this_thread::sleep_for(chrono::milliseconds(10));
+  }
+}
+
+void midi_thread(string device, int user) {
   ifstream midi;
   open_midi(midi, device);
   cout << "Levels " << 16 * user << "-" << 16 * (user + 1) - 1 << " are being synchronized." << endl;
 
+  // continuously get MIDI messages and send them to the other thread,
+  // overwriting old messages if they haven't been read yet
   while (true) {
     uint8_t status, channel, value;
     read_midi_message(midi, status, channel, value);
@@ -94,19 +130,26 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    pt::ptree json;
-    json.put("type", "set-levels");
-    pt::ptree current;
-    current.put("channel", output_channel);
-    current.put("value", value * 2);
-    pt::ptree array;
-    array.push_back(std::make_pair("", current));
-    json.put_child("values", array);
-    stringstream ss;
-    pt::write_json(ss, json);
-    string s = ss.str();
-    ws.write(net::buffer(s));
+    unique_lock<mutex> lock(changes_mutex);
+    changes[output_channel] = value * 2;
+    ws_signal.notify_all();
   }
+}
 
-  ws.close("Client exited.");
+int main(int argc, char **argv) {
+  validate_arguments(argc);
+
+  string device = argv[1];
+  string server_name = argv[2];
+  string port = argv[3];
+  int user = stoi(argv[4]);
+  cout << "Using MIDI device: <" << device << ">" << endl;
+  cout << "Using server: <" << server_name << ":" << port << ">" << endl;
+  cout << "Using user: <" << user << ">" << endl;
+
+  thread ws(ws_thread, server_name, port);
+  thread midi(midi_thread, device, user);
+
+  ws.join();
+  midi.join();
 }
