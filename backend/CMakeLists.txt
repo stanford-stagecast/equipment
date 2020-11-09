@@ -24,6 +24,9 @@ add_subdirectory(web)
 # Mixer
 add_subdirectory(mixer)
 
+# CLI MIDI client
+add_subdirectory(cli)
+
 # Tests
 add_subdirectory(tests)
 include(tests.cmake)
