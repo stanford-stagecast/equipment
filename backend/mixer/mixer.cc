@@ -29,6 +29,14 @@ void Mixer::mix(vector<Level> levels) {
 	l_out_.write(reinterpret_cast<char*>(&left_sample), sizeof(tmp));
 }
 
+void Mixer::remove_wav_headers() {
+	for (size_t i = 0; i < streams_.size(); i++) {
+		WavHeader header;
+		header.read_from_file(streams_[i]);
+		cout << header << endl;
+	}
+}
+
 Mixer::~Mixer() {
 	for (size_t i = 0; i < streams_.size(); i++) {
 		streams_[i].close();
