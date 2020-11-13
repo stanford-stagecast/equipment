@@ -2,13 +2,9 @@
 #include <iostream>
 #include <vector>
 
-int main(int argc, char* argv[]) {
-	if (argc > 1) {
+using namespace std;
 
-		Mixer mixer{std::vector<std::string>{argv + 1, argv + argc}};
-	} else {
-		std::cerr << "must supply filename to mix" << std::endl;
-		return 1;
-	}
+int main() {
+	Mixer mixer{{"../../tests/float_440_hz_tone.wav", "../../tests/float_441_hz_tone.wav"}};
 	return 0;
 }
