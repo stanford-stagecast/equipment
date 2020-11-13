@@ -1,1 +1,1 @@
-add_executable(mixer mixer.cc main.cc)
+add_executable(mixer mixer.cc test.cc)
