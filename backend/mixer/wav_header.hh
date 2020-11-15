@@ -20,15 +20,8 @@ struct __attribute__ ((packed)) WavHeader {
 	uint32_t data_size{};		// number of bytes in the data
 };
 
-inline std::ostream& operator<<(std::ostream& os, WavHeader& header) {
-	os.write(reinterpret_cast<char*>(&header), sizeof(header));
-	return os;
-}
+inline std::ostream& operator<<(std::ostream& os, WavHeader& header);
 
-WavHeader read_wav_header(std::ifstream& file) {
-	WavHeader header;
-	file.read(reinterpret_cast<char*>(&header), sizeof(header));
-	return header;
-}
+WavHeader read_wav_header(std::ifstream& file);
 
 #endif

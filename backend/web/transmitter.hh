@@ -16,7 +16,7 @@ private:
   unsigned universe_;
   universe_t saved_{};
   unsigned ms_since_last_tx_{0};
-  uint8_t seqno_{1}; // 0x01-0xff
+  uint64_t seqno_{};
 
 public:
   Transmitter(net::io_context& context, net::ip::address destination, unsigned universe);
