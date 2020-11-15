@@ -17,16 +17,16 @@ class Mixer {
   private:
 	std::vector<std::ifstream> streams_{};
 
-	// right audio channel
-	std::ofstream r_out_{};
-
 	// left audio channel
-	std::ofstream l_out_{};
+	std::ofstream l_out_;
+
+	// right audio channel
+	std::ofstream r_out_;
 
   public:
     // the constructor takes in a vector of filenames and opens an ifstream to
     // each file in the vector
-	Mixer(std::vector<std::string> filenames);
+	Mixer(std::vector<std::string> filenames, std::string l_output, std::string r_output);
 
     // The mix method takes in the a vector of levels and mixes all the inputs
     // down to a left and a right channel

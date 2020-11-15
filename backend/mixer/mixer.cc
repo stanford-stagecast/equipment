@@ -5,9 +5,23 @@ using namespace std;
 
 // TODO: Make the constructor open the channels in a way that the audio server likes
 // TODO:
-Mixer::Mixer(vector<string> filenames) {
+Mixer::Mixer(vector<string> filenames, string l_output, string r_output)
+  : l_out_{l_output}
+  , r_out_{r_output} {
 	if (filenames.size() == 0) {
 		throw "Must supply at least one file to open";
+	}
+
+	if(!l_out_) {
+		cerr << "failed to open left channel on " << l_output << endl;
+	} else {
+		cerr << "sucessfully opened left channel on " << l_output << endl;
+	}
+
+	if(!r_out_) {
+		cerr << "failed to open right channel on " << r_output << endl;
+	} else {
+		cerr << "sucessfully opened right channel on " << r_output << endl;
 	}
 
 	for (string name : filenames) {
@@ -15,7 +29,7 @@ Mixer::Mixer(vector<string> filenames) {
 		if (!streams_.back()) {
 			cerr << "could not open " << name << endl;
 		} else {
-			cout << "opened " << name << " sucessfully." << endl;
+			cerr << "opened " << name << " sucessfully." << endl;
 		}
 	}
 }
