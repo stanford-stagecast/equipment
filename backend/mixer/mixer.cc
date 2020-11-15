@@ -49,10 +49,13 @@ void Mixer::mix(vector<Level> levels) {
 }
 
 void Mixer::remove_wav_headers() {
-	for (size_t i = 0; i < streams_.size(); i++) {
-		WavHeader header{};
+	WavHeader header{};
+	header = header.read_wav_header(streams_[0]);
+	l_out_ << header;
+	r_out_ << header;
+
+	for (size_t i = 1; i < streams_.size(); i++) {
 		header = header.read_wav_header(streams_[i]);
-		cout << header << endl;
 	}
 }
 

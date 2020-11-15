@@ -32,8 +32,9 @@ class Mixer {
     // down to a left and a right channel
 	void mix(std::vector<Level> levels);
 
-    // This method reads, prints and removes the wav headers of the files.
-    // It is useful when reading from wav files
+    // This method reads, prints and removes the wav headers of the files. And
+    // then writes the wav header to the left and right outputs. It's only
+    // useful when mixing wav files
     void remove_wav_headers();
 
     // returns true if the EOF bit is set on streams_[0]
