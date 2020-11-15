@@ -35,6 +35,11 @@ class Mixer {
     // This method reads, prints and removes the wav headers of the files.
     // It is useful when reading from wav files
     void remove_wav_headers();
+
+    // returns true if the EOF bit is set on streams_[0]
+    bool first_file_ended();
+
+    // The destructor loops over the open file descriptors and closes them
 	~Mixer();
 };
 

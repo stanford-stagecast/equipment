@@ -6,6 +6,10 @@ using namespace std;
 // TODO: Make the constructor open the channels in a way that the audio server likes
 // TODO:
 Mixer::Mixer(vector<string> filenames) {
+	if (filenames.size() == 0) {
+		throw "Must supply at least one file to open";
+	}
+
 	for (string name : filenames) {
 		streams_.push_back(ifstream{name, ifstream::binary});
 		if (!streams_.back()) {
@@ -37,6 +41,8 @@ void Mixer::remove_wav_headers() {
 		cout << header << endl;
 	}
 }
+
+bool Mixer::first_file_ended() { return streams_[0].eof(); }
 
 Mixer::~Mixer() {
 	for (size_t i = 0; i < streams_.size(); i++) {
