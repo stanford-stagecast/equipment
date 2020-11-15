@@ -1,6 +1,6 @@
 #include "wav_header.hh"
 
-inline WavHeader::std::ostream& operator<<(std::ostream& os, WavHeader& header) {
+std::ostream& operator<<(std::ostream& os, WavHeader& header) {
 	os.write(reinterpret_cast<char*>(&header), sizeof(header));
 	return os;
 }
