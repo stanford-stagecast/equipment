@@ -1,1 +1,4 @@
-add_executable(mixer mixer.cc main.cc)
+add_executable(mixer mixer.cc main.cc receiver.cc)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(mixer PRIVATE Threads::Threads)

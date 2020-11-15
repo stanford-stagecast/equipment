@@ -1,4 +1,5 @@
 #include "mixer.hh"
+#include "receiver.hh"
 #include <iostream>
 #include <vector>
 
