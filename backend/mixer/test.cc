@@ -11,7 +11,7 @@ int main() {
 	mixer.remove_wav_headers();
 
 	while (!mixer.first_file_ended()) {
-		mixer.mix({{0, 1}, {0, 1}});
+		mixer.mix({{1, 1}, {-1, 1}});
 	}
 
 	return 0;
