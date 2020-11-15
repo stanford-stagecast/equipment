@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-struct __attribute__ ((packed)) WavHeader {
+struct __attribute__ ((packed)) WavHeader_struct {
 	char riff[4];			// Always 'RIFF'
 	uint32_t file_size{};		// size of file
 	char wave[4];			// Always 'WAVE'
@@ -20,8 +20,18 @@ struct __attribute__ ((packed)) WavHeader {
 	uint32_t data_size{};		// number of bytes in the data
 };
 
-std::ostream& operator<<(std::ostream& os, WavHeader& header);
+static_assert(sizeof(WavHeader_struct) == 44);
 
-WavHeader read_wav_header(std::ifstream& file);
+class WavHeader {
+  private:
+	WavHeader_struct header_{};
+
+  public:
+	WavHeader() {}
+	WavHeader read_wav_header(std::ifstream& file);
+	friend std::ostream& operator<<(std::ostream& os, WavHeader header);
+};
+
+std::ostream& operator<<(std::ostream& os, WavHeader header);
 
 #endif
