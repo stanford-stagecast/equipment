@@ -60,8 +60,8 @@ void Receiver::receive(uint16_t port) {
       for (size_t channel = 0; channel < 8; channel++) {
         size_t level = user * 16 + channel;
         size_t pan = level + 8;
-        output[user][channel].pan = msg.data[pan];
-        output[user][channel].level = msg.data[level];
+        output[user][channel].pan = msg.data[pan]/255.f;
+        output[user][channel].level = msg.data[level]/255.f;
       }
     }
 
