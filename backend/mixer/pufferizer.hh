@@ -3,6 +3,9 @@
 
 #include <string>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
+
 #include "wav_header.hh"
 
 class Pufferizer {
@@ -27,8 +30,14 @@ class Pufferizer {
 
 	};
 
+	// This method converts floating point samples to 16 bit PCM samples
+	// It's entirely based on code from the following link
+	// https://github.com/stanford-stagecast/audio/blob/main/src/audio/alsa_devices.cc#L372-L376
+	inline int16_t float_to_sample( const float sample_f );
 
   public:
+	// The constructor takes in strings specifiying where to read data from
+	// and write data to and populates the members accordingly
 	Pufferizer(const std::string& prefix,
 		const std::string& destination,
 		const std::string& left_input,
@@ -37,7 +46,7 @@ class Pufferizer {
 	// reads in enough data to write one 5 second wav file
 	void pufferize_once();
 
-	bool eof() const { return l_in_.eof() && r_in_.eof(); }
+	bool eof() const;
 };
 
 
