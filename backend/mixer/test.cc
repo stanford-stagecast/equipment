@@ -1,6 +1,8 @@
-#include "mixer.hh"
 #include <iostream>
 #include <vector>
+
+#include "mixer.hh"
+#include "pufferizer.hh"
 
 using namespace std;
 
