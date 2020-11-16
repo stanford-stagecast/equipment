@@ -10,6 +10,16 @@
 
 class Pufferizer {
   private:
+    // The number of samples that Puffer expects to overlap
+    static const size_t OVERLAP_SIZE_{10248};
+
+    // The total number of samples in each puffer file
+    // Currently 5 seconds at 48000 samples per second
+    static const size_t TOTAL_SIZE_{240000};
+
+    // Ensures that the overlaps don't overlap
+    static_assert(TOTAL_SIZE_ > 2 * OVERLAP_SIZE_);
+
 	// The prefix of the files for it to write
 	std::string prefix_;
 
@@ -26,9 +36,24 @@ class Pufferizer {
 	size_t next_file_{0};
 
 	// This is the default header that gets written to every output file
-	WavHeader header_{
+	WavHeader header_( WavHeader_struct(
+        // {'R' 'I' 'F' 'F'},
+        // 0,
+        // ['W', 'A', 'V', 'E'],
+        // ['f', 'm', 't', '\0'],
+        // 16,
+        // 1,
+        // 2,
+        // 48000,
+        // 192000,
+        // 4,
+        // ['d', 'a', 't', 'a'],
+        // TOTAL_SIZE_ * 4 // number of samples * number of channels * bits per sample / 8
+    ) );
 
-	};
+    // This holds the overlap data between different puffer files.
+    // The constructor initializes it all to 0
+    int16_t overlap_[2 * OVERLAP_SIZE_];
 
 	// This method converts floating point samples to 16 bit PCM samples
 	// It's entirely based on code from the following link
