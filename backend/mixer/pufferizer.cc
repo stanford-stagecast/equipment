@@ -24,7 +24,7 @@ inline int16_t Pufferizer::float_to_sample( const float sample_f ) {
 
 void Pufferizer::pufferize_once() {
 	// open the correct file
-	ofstream os{dest_ + "/" + prefix_ + to_string(next_file_)};
+	ofstream os{dest_ + "/" + prefix_ + to_string(next_file_) + ".wav"};
 
 	// write the wav header
 	os << header_;
