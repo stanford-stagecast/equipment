@@ -35,21 +35,24 @@ class Pufferizer {
 	// The number of the next file to write
 	size_t next_file_{0};
 
+    WavHeader_struct header_struct_{
+        'R', 'I', 'F', 'F',
+        882036,
+        'W', 'A', 'V', 'E',
+        'f', 'm', 't', '\0',
+        16,
+        1,
+        2,
+        48000,
+        192000,
+        4,
+        16,
+        'd', 'a', 't', 'a',
+        TOTAL_SIZE_ * 4 // number of samples * number of channels * bits per sample / 8
+    };
+
 	// This is the default header that gets written to every output file
-	WavHeader header_( WavHeader_struct(
-        // {'R' 'I' 'F' 'F'},
-        // 0,
-        // ['W', 'A', 'V', 'E'],
-        // ['f', 'm', 't', '\0'],
-        // 16,
-        // 1,
-        // 2,
-        // 48000,
-        // 192000,
-        // 4,
-        // ['d', 'a', 't', 'a'],
-        // TOTAL_SIZE_ * 4 // number of samples * number of channels * bits per sample / 8
-    ) );
+	WavHeader header_{header_struct_};
 
     // This holds the overlap data between different puffer files.
     // The constructor initializes it all to 0
@@ -58,7 +61,7 @@ class Pufferizer {
 	// This method converts floating point samples to 16 bit PCM samples
 	// It's entirely based on code from the following link
 	// https://github.com/stanford-stagecast/audio/blob/main/src/audio/alsa_devices.cc#L372-L376
-	inline int16_t float_to_sample( const float sample_f );
+    inline int16_t float_to_sample( const float sample_f );
 
   public:
 	// The constructor takes in strings specifiying where to read data from

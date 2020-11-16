@@ -31,26 +31,32 @@ void Pufferizer::pufferize_once() {
 
 	// write the overlapping data
 	for (size_t i = 0; i < 2 * OVERLAP_SIZE_; i++) {
-		os.write(overlap_[i], sizeof(int16_t));
+		os.write(reinterpret_cast<char*>(&overlap_[i]), sizeof(int16_t));
 	}
 
 	// read from the input and write the data
-	char tmp[sizeof(int16_t)];
+	char tmp[sizeof(float)];
+	int16_t sample;
 	for (size_t i = 0; i < TOTAL_SIZE_ - 2 * OVERLAP_SIZE_; i++) {
 		l_in_.read(tmp, sizeof(tmp));
-		os.write(float_to_sample(tmp), sizeof(int16_t));
+		sample = float_to_sample(*reinterpret_cast<float*>(tmp));
+		os.write(reinterpret_cast<char*>(&sample), sizeof(int16_t));
 		r_in_.read(tmp, sizeof(tmp));
-		os.write(float_to_sample(tmp), sizeof(int16_t));
+		sample = float_to_sample(*reinterpret_cast<float*>(tmp));
+		os.write(reinterpret_cast<char*>(&sample), sizeof(int16_t));
 	}
 
 	// read from the input and write the overlapping data to the output and to overlap_
 	for (size_t i = 0; i < 2 * OVERLAP_SIZE_; i += 2) {
 		l_in_.read(tmp, sizeof(tmp));
-		os.write(float_to_sample(tmp), sizeof(int16_t));
-		overlap_[i] = *reinterpret_cast<int16_t*>(tmp);
+		sample = float_to_sample(*reinterpret_cast<float*>(tmp));
+		os.write(reinterpret_cast<char*>(&sample), sizeof(int16_t));
+		overlap_[i] = sample;
+
 		r_in_.read(tmp, sizeof(tmp));
-		os.write(float_to_sample(tmp), sizeof(int16_t));
-		overlap_[i+1] = *reinterpret_cast<int16_t*>(tmp);
+		sample = float_to_sample(*reinterpret_cast<float*>(tmp));
+		os.write(reinterpret_cast<char*>(&sample), sizeof(int16_t));
+		overlap_[i+1] = sample;
 	}
 
 	next_file_++;
