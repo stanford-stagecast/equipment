@@ -24,10 +24,11 @@ static_assert(sizeof(WavHeader_struct) == 44);
 
 class WavHeader {
   private:
-	WavHeader_struct header_{};
+	WavHeader_struct header_;
 
   public:
-	WavHeader() {}
+	WavHeader();
+	WavHeader(WavHeader_struct header);
 	WavHeader read_wav_header(std::ifstream& file);
 	friend std::ostream& operator<<(std::ostream& os, WavHeader header);
 };
