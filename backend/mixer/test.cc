@@ -13,10 +13,10 @@ int main() {
 	mixer.remove_wav_headers();
 
 	while (!mixer.first_file_ended()) {
-		mixer.mix({{1, 1}, {-1, 1}});
+		mixer.mix({{-1, 1}, {-1, 1}});
 	}
 
-	Pufferizer pufferizer{"puffer_", "../tests", "left.out", "right.out"};
+	Pufferizer pufferizer{"puffer_", ".", "left.out", "right.out"};
 	while (!pufferizer.eof()) {
 		pufferizer.pufferize_once();
 	}
