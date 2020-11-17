@@ -16,7 +16,7 @@ int main() {
 		mixer.mix({{-1, 1}, {-1, 1}});
 	}
 
-	Pufferizer pufferizer{"puffer_", ".", "left.out", "right.out"};
+	Pufferizer pufferizer{"", ".", "left.out", "right.out"};
 	while (!pufferizer.eof()) {
 		pufferizer.pufferize_once();
 	}

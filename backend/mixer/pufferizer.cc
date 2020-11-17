@@ -10,7 +10,7 @@ Pufferizer::Pufferizer(const string& prefix,
 	, dest_{destination}
 	, l_in_{left_input}
 	, r_in_{right_input} {
-		fill(overlap_, overlap_ + 20496, 0.0f);
+		fill(overlap_, overlap_ + OVERLAP_SIZE_ * 2, 0.0f);
 	}
 
 bool Pufferizer::eof() const {
@@ -24,7 +24,7 @@ inline int16_t Pufferizer::float_to_sample( const float sample_f ) {
 
 void Pufferizer::pufferize_once() {
 	// open the correct file
-	ofstream os{dest_ + "/" + prefix_ + to_string(next_file_) + ".wav"};
+	ofstream os{dest_ + "/" + prefix_ + to_string(next_file_ * 432000) + ".wav"};
 
 	// write the wav header
 	os << header_;

@@ -13,9 +13,11 @@ class Pufferizer {
     // The number of samples that Puffer expects to overlap
     static const size_t OVERLAP_SIZE_{10248};
 
+    static const size_t CHUNK_SIZE_{230400};
+
     // The total number of samples in each puffer file
-    // Currently 5 seconds at 48000 samples per second
-    static const size_t TOTAL_SIZE_{240000};
+    // Currently 4.8 seconds at 48000 samples per second
+    static const size_t TOTAL_SIZE_{OVERLAP_SIZE_ + CHUNK_SIZE_};
 
     // Ensures that the overlaps don't overlap
     static_assert(TOTAL_SIZE_ > 2 * OVERLAP_SIZE_);
@@ -37,7 +39,7 @@ class Pufferizer {
 
     WavHeader_struct header_struct_{
         'R', 'I', 'F', 'F',
-        882036,
+        36 + TOTAL_SIZE_ * 4,
         'W', 'A', 'V', 'E',
         'f', 'm', 't', ' ',
         16,
