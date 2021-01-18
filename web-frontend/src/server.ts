@@ -291,4 +291,11 @@ export default class Server {
     };
     this.socket.send(JSON.stringify(data));
   }
+
+  save_to_disk() {
+    let data = {
+      type: 'save-to-disk',
+    };
+    this.socket.send(JSON.stringify(data));
+  }
 }

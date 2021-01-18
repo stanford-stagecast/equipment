@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/optional.hpp>
 #include "net.hh"
 
 #include "cuelist.hh"
@@ -22,6 +23,7 @@ private:
   boost::asio::steady_timer timer_;
   std::chrono::milliseconds tick_time_{};
   Transmitter transmitter_;
+  std::string filename_;
 
   void set_levels(CueList& list, boost::property_tree::ptree values);
   void save_cue(CueList& list, unsigned q, float time);
@@ -39,8 +41,9 @@ private:
   void track_channel(CueList& list, unsigned channel);
   void block_channel(CueList& list, unsigned channel);
 
+  void save_to_disk();
 public:
-  Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc);
+  Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc, std::string filename);
 
   void begin();
   void on_update(std::string_view update);

@@ -15,7 +15,7 @@ find_package(Threads REQUIRED)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.71 REQUIRED COMPONENTS thread system)
+find_package(Boost 1.71 REQUIRED COMPONENTS thread system serialization)
 message(STATUS "Boost Version: ${Boost_VERSION}")
 
 # Web Backend

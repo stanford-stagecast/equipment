@@ -28,7 +28,7 @@ std::vector<CueList::level_info_t> CueList::current_levels() {
     info.channel = i;
 
     Cue::level_t level = next;
-    std::optional<float> fade = fade_progress();
+    boost::optional<float> fade = fade_progress();
     if (fade) {
       Cue::level_t old_level = 0;
       if (i < fade_source_.size()) {
@@ -60,7 +60,7 @@ std::vector<CueList::level_info_t> CueList::current_levels() {
 }
 
 void CueList::set_level(Cue::channel_t channel,
-                        std::optional<Cue::level_t> level) {
+                        boost::optional<Cue::level_t> level) {
   max_known_channel_ = std::max(max_known_channel_, channel);
   if (level.has_value()) {
     level_overrides_[channel] = *level;
@@ -72,7 +72,7 @@ void CueList::set_level(Cue::channel_t channel,
 void CueList::track(Cue::channel_t channel) {
   if (current_cue_number_ >= cues_.size())
     return;
-  cues_[current_cue_number_]->set_level(channel, std::nullopt);
+  cues_[current_cue_number_]->set_level(channel, boost::none);
 }
 
 void CueList::block(Cue::channel_t channel) {
@@ -95,7 +95,7 @@ void CueList::go_to_cue(unsigned int q) {
     return;
   }
 
-  std::optional<Cue> cue = cues_[q];
+  boost::optional<Cue> cue = cues_[q];
   if (!cue)
     return;
 
@@ -122,7 +122,7 @@ void CueList::go_to_cue(unsigned int q) {
 
 void CueList::record_cue(unsigned q, float time) {
   std::vector<level_info_t> info = current_levels();
-  std::optional<Cue> old_cue(std::nullopt);
+  boost::optional<Cue> old_cue(boost::none);
 
   Cue::levels_t levels;
   Cue new_cue = Cue(time);
@@ -137,7 +137,7 @@ void CueList::record_cue(unsigned q, float time) {
   if (q >= cues_.size()) {
     cues_.resize(q + 1);
   }
-  std::optional<Cue> some_cue(new_cue);
+  boost::optional<Cue> some_cue(new_cue);
   cues_[q].swap(some_cue);
   current_cue_number_ = q;
   level_overrides_.clear();
@@ -151,14 +151,14 @@ void CueList::delete_cue(unsigned q) {
   if (q == current_cue_number_) {
     current_cue_number_ = previous_cue();
   }
-  std::optional<Cue> none(std::nullopt);
+  boost::optional<Cue> none(boost::none);
   cues_[q].swap(none);
 }
 
 std::vector<CueList::cue_info_t> CueList::cue_info() {
   std::vector<CueList::cue_info_t> cues;
   for (size_t i = 0; i < cues_.size(); i++) {
-    std::optional<Cue> cue = cues_[i];
+    boost::optional<Cue> cue = cues_[i];
     if (!cue)
       continue;
     cue_info_t info;
@@ -179,9 +179,9 @@ void CueList::tick(int ms) {
   }
 }
 
-std::optional<float> CueList::fade_progress() {
+boost::optional<float> CueList::fade_progress() {
   if (!is_fading_)
-    return std::nullopt;
+    return boost::none;
   return 1 - (fade_time_left_ / fade_time_total_);
 }
 
@@ -199,9 +199,9 @@ Cue::level_t CueList::get_tracked_level_at(int cue,
     current_cue = cues_.size() - 1;
   }
   while (current_cue >= 0) {
-    std::optional<Cue> current = cues_[current_cue];
+    boost::optional<Cue> current = cues_[current_cue];
     if (current) {
-      std::optional<Cue::level_t> level = current->get_level(channel);
+      boost::optional<Cue::level_t> level = current->get_level(channel);
       if (level) {
         return *level;
       }
@@ -216,7 +216,7 @@ unsigned CueList::next_cue() {
   unsigned next = prev + 1;
 
   while (next < cues_.size()) {
-    std::optional<Cue> cue = cues_[next];
+    boost::optional<Cue> cue = cues_[next];
     if (cue) {
       return next;
     }
@@ -230,7 +230,7 @@ unsigned CueList::previous_cue() {
   int prev = next - 1;
 
   while (prev >= 0) {
-    std::optional<Cue> cue = cues_[prev];
+    boost::optional<Cue> cue = cues_[prev];
     if (cue) {
       return prev;
     }

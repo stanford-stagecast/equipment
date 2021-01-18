@@ -3,6 +3,7 @@
 
 #include <string_view>
 
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include "beast.hh"
 #include "net.hh"
 

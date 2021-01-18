@@ -1,10 +1,12 @@
 #ifndef CUELIST_HH
 #define CUELIST_HH
 
+#include "serialization.hh"
 #include "cue.hh"
 #include <map>
 #include <string>
 #include <vector>
+#include <boost/optional.hpp>
 
 class CueList {
 public:
@@ -28,13 +30,26 @@ public:
   } level_info_t;
 
 private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(cues_);
+      ar & BOOST_SERIALIZATION_NVP(max_known_channel_);
+      ar & BOOST_SERIALIZATION_NVP(number_);
+      ar & BOOST_SERIALIZATION_NVP(name_);
+      ar & BOOST_SERIALIZATION_NVP(last_cue_number_);
+      ar & BOOST_SERIALIZATION_NVP(current_cue_number_);
+    }
+
   typedef enum {
     DEFAULT,
     FORCE_TRACK,
     FORCE_BLOCK,
   } tracking_state_t;
 
-  std::vector<std::optional<Cue>> cues_{};
+  std::vector<boost::optional<Cue>> cues_{};
   unsigned current_cue_number_{0};
 
   std::map<Cue::channel_t, Cue::level_t> level_overrides_{};
@@ -54,12 +69,13 @@ private:
 
 public:
   CueList(unsigned number, std::string name);
+  CueList(): number_(0), name_("") {}
 
-  std::optional<float> fade_progress();
+  boost::optional<float> fade_progress();
   void tick(int ms);
 
   std::vector<level_info_t> current_levels();
-  void set_level(Cue::channel_t channel, std::optional<Cue::level_t> level);
+  void set_level(Cue::channel_t channel, boost::optional<Cue::level_t> level);
   void track(Cue::channel_t channel);
   void block(Cue::channel_t channel);
   void back();

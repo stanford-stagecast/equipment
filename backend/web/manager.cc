@@ -26,17 +26,41 @@ static const string GO_CUE = "go-cue";
 static const string BACK_CUE = "back-cue";
 static const string DELETE_CUE = "delete-cue";
 static const string LIST_CUES = "list-cues";
+static const string SAVE_TO_DISK = "save-to-disk";
 
-Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc)
+Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::string filename)
     : dispatcher_(dispatcher), ioc_(ioc),
       timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)),
-      transmitter_(ioc, net::ip::make_address("127.0.0.1"), 0) {
+      transmitter_(ioc, net::ip::make_address("127.0.0.1"), 0),
+      filename_(filename) {
   tick_time_ = chrono::duration_cast<chrono::milliseconds>(
       chrono::system_clock::now().time_since_epoch());
   timer_.async_wait(boost::bind(&Manager::tick, this));
+
+  std::ifstream ifs(filename_);
+  if (!ifs.is_open()) {
+    cout << "Unable to find input file.  Initializing with empty state." << endl;
+    return;
+  }
+  try {
+    boost::archive::xml_iarchive archive(ifs);
+    archive >> BOOST_SERIALIZATION_NVP(lists_);
+  } catch (boost::archive::archive_exception& e) {
+    cerr << e.what() << endl;
+    cerr << "Could not process saved cues." << endl;
+    exit(1);
+  }
 }
 
 void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
+
+void Manager::save_to_disk() {
+  std::ofstream ofs(filename_);
+  {
+    boost::archive::xml_oarchive archive(ofs);
+    archive << BOOST_SERIALIZATION_NVP(lists_);
+  }
+}
 
 string status_message(CueList::cue_status_t status) {
   switch (status) {
@@ -143,7 +167,7 @@ void Manager::back_cue(CueList &list_) {
 }
 
 void Manager::reset_channel(CueList &list_, unsigned channel) {
-  list_.set_level(channel, nullopt);
+  list_.set_level(channel, boost::none);
   get_levels(list_);
 }
 
@@ -222,6 +246,10 @@ void Manager::on_update(string_view update) {
     if (type == GET_LISTS) {
       cout << endl;
       get_lists();
+      return;
+    } else if (type == SAVE_TO_DISK) {
+      cout << endl;
+      save_to_disk();
       return;
     }
 

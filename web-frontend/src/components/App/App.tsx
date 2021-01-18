@@ -61,7 +61,6 @@ export default function App(_props: {}) {
   const server: MutableRefObject<Server | null> = useRef(null);
   const controller: MutableRefObject<Controller | null> = useRef(null);
   useEffect(() => {
-    console.log("reeffect", state.lists.id);
     server.current = new Server(dispatch, state.lists.id);
     return () => {
       server.current?.disconnect();
@@ -95,6 +94,7 @@ export default function App(_props: {}) {
         }
       </div>
       <CueStatus data={state.cue} cues={state.cues} dispatch={dispatch} server={server.current as Server}/>
+      <button onClick={() => server.current?.save_to_disk()}>Save to Disk</button>
     </div>
   );
 }
