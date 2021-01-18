@@ -5,7 +5,7 @@ const SERVER_URL: string = 'ws://localhost:8000';
 
 type GetLevels = {
   type: 'get-levels',
-  list_id: number,
+  list: string,
   cue: {
     'current': string,
     'fade_time': string,
@@ -36,7 +36,7 @@ type GetLists = {
 
 type ListCues = {
   type: 'list-cues',
-  list_id: number,
+  list: string,
   cue: string,
   cues: [
     {
@@ -66,8 +66,7 @@ export default class Server {
     let socket = new WebSocket(SERVER_URL);
     socket.onmessage = (evt) => this.onmessage(evt.data);
     socket.onopen = () => this.onopen();
-    socket.onclose = (e) => {
-      console.log(e);
+    socket.onclose = () => {
       if (this.disconnect_timeout === undefined) {
         this.disconnect_timeout = window.setTimeout(() => {
           this.dispatch({type: 'connection_change', status: false});
@@ -84,18 +83,27 @@ export default class Server {
     return socket;
   }
 
+  public disconnect() {
+    console.log("disconnect");
+    this.onmessage = () => {};
+    if (this.socket) {
+      this.socket.onclose = () => {};
+      this.socket.close();
+    }
+  }
+
   private onopen() {
     window.clearTimeout(this.disconnect_timeout);
     this.disconnect_timeout = undefined;
     this.dispatch({type: 'connection_change', status: true});
     {
-      let data = {type: 'get-lists'};
-      this.socket.send(JSON.stringify(data));
-    }
-    {
       let data = {type: 'get-levels', list_id: this.list_id};
       this.socket.send(JSON.stringify(data));
       data = {type: 'list-cues', list_id: this.list_id};
+      this.socket.send(JSON.stringify(data));
+    }
+    {
+      let data = {type: 'get-lists'};
       this.socket.send(JSON.stringify(data));
     }
   }
@@ -122,6 +130,7 @@ export default class Server {
   }
 
   private get_levels(msg: GetLevels) {
+    if (parseInt(msg.list) !== this.list_id) return;
     let values = msg.values || [];
     this.dispatch({
       type: 'update_channels',
@@ -161,6 +170,7 @@ export default class Server {
   }
 
   private list_cues(msg: ListCues) {
+    if (parseInt(msg.list) !== this.list_id) return;
     let cues = msg.cues || [];
     this.dispatch({
       type: 'update_cue_list',
@@ -168,6 +178,25 @@ export default class Server {
         return parseInt(x.number);
       }),
     });
+  }
+
+  rename_list(list_id: number, name: string) {
+    list_id = Math.floor(list_id);
+    let data = {
+      type: 'rename-list',
+      list_id: this.list_id,
+      name,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  delete_list(list_id: number) {
+    list_id = Math.floor(list_id);
+    let data = {
+      type: 'delete-list',
+      list_id: this.list_id,
+    };
+    this.socket.send(JSON.stringify(data));
   }
 
   reset_channel(channel: number) {
@@ -223,6 +252,16 @@ export default class Server {
       list_id: this.list_id,
       cue,
       time,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  delete_cue(cue: number) {
+    cue = Math.floor(cue);
+    let data = {
+      type: 'delete-cue',
+      list_id: this.list_id,
+      cue,
     };
     this.socket.send(JSON.stringify(data));
   }

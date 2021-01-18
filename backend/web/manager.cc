@@ -3,8 +3,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
-#include <queue>
 #include <optional>
+#include <queue>
 
 using namespace std;
 
@@ -13,6 +13,8 @@ static const unsigned CYCLE_TIME_MS = 25;
 namespace json = boost::property_tree;
 
 static const string GET_LISTS = "get-lists";
+static const string RENAME_LIST = "rename-list";
+static const string DELETE_LIST = "delete-list";
 static const string GET_LEVELS = "get-levels";
 static const string SET_LEVELS = "set-levels";
 static const string RESET_CHANNEL = "reset-channel";
@@ -53,12 +55,12 @@ string status_message(CueList::cue_status_t status) {
   return "unknown";
 }
 
-void Manager::get_levels(CueList& list_) {
+void Manager::get_levels(CueList &list_) {
   json::ptree root;
   json::ptree values;
   json::ptree cue_info;
 
-  Transmitter::universe_t universe = { 0 };
+  Transmitter::universe_t universe = {0};
 
   for (auto info : list_.current_levels()) {
     json::ptree current;
@@ -92,7 +94,7 @@ void Manager::get_levels(CueList& list_) {
   dispatcher_->do_update(string_view(ss.str()));
 }
 
-void Manager::set_levels(CueList& list_, boost::property_tree::ptree values) {
+void Manager::set_levels(CueList &list_, boost::property_tree::ptree values) {
   for (auto &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
@@ -102,18 +104,17 @@ void Manager::set_levels(CueList& list_, boost::property_tree::ptree values) {
   get_levels(list_);
 }
 
-void Manager::save_cue(CueList& list_, unsigned q, float time) {
+void Manager::save_cue(CueList &list_, unsigned q, float time) {
   list_.record_cue(q, time);
   list_cues(list_);
   get_levels(list_);
 }
 
 void Manager::tick() {
-  chrono::milliseconds now =
-      chrono::duration_cast<chrono::milliseconds>(
-          chrono::system_clock::now().time_since_epoch());
-  for (auto& x : lists_) {
-    CueList& list_ = x.second;
+  chrono::milliseconds now = chrono::duration_cast<chrono::milliseconds>(
+      chrono::system_clock::now().time_since_epoch());
+  for (auto &x : lists_) {
+    CueList &list_ = x.second;
     if (list_.fade_progress().has_value()) {
       list_.tick((now - tick_time_).count());
       get_levels(list_);
@@ -126,43 +127,43 @@ void Manager::tick() {
   timer_.async_wait(boost::bind(&Manager::tick, this));
 }
 
-void Manager::restore_cue(CueList& list_, unsigned q) {
+void Manager::restore_cue(CueList &list_, unsigned q) {
   list_.go_to_cue(q);
   get_levels(list_);
 }
 
-void Manager::go_cue(CueList& list_) {
+void Manager::go_cue(CueList &list_) {
   list_.go();
   get_levels(list_);
 }
 
-void Manager::back_cue(CueList& list_) {
+void Manager::back_cue(CueList &list_) {
   list_.back();
   get_levels(list_);
 }
 
-void Manager::reset_channel(CueList& list_, unsigned channel) {
+void Manager::reset_channel(CueList &list_, unsigned channel) {
   list_.set_level(channel, nullopt);
   get_levels(list_);
 }
 
-void Manager::track_channel(CueList& list_, unsigned channel) {
+void Manager::track_channel(CueList &list_, unsigned channel) {
   list_.track(channel);
   get_levels(list_);
 }
 
-void Manager::block_channel(CueList& list_, unsigned channel) {
+void Manager::block_channel(CueList &list_, unsigned channel) {
   list_.block(channel);
   get_levels(list_);
 }
 
-void Manager::delete_cue(CueList& list_, unsigned q) {
+void Manager::delete_cue(CueList &list_, unsigned q) {
   list_.delete_cue(q);
   get_levels(list_);
   list_cues(list_);
 }
 
-void Manager::list_cues(CueList& list_) {
+void Manager::list_cues(CueList &list_) {
   json::ptree root;
   json::ptree cues;
   for (auto &x : list_.cue_info()) {
@@ -173,6 +174,7 @@ void Manager::list_cues(CueList& list_) {
   }
   root.put("type", LIST_CUES);
   root.put("cue", list_.cue());
+  root.put("list", list_.number());
   root.put_child("cues", cues);
 
   stringstream ss;
@@ -183,8 +185,8 @@ void Manager::list_cues(CueList& list_) {
 void Manager::get_lists() {
   json::ptree root;
   json::ptree lists;
-  for (auto& x : lists_) {
-    CueList& l = x.second;
+  for (auto &x : lists_) {
+    CueList &l = x.second;
     json::ptree current;
     current.put("number", l.number());
     current.put("name", l.name());
@@ -198,6 +200,16 @@ void Manager::get_lists() {
   dispatcher_->do_update(string_view(ss.str()));
 }
 
+void Manager::rename_list(CueList &list, string &name) {
+  list.set_name(name);
+  get_lists();
+}
+
+void Manager::delete_list(CueList &list) {
+  lists_.erase(list.number());
+  get_lists();
+}
+
 void Manager::on_update(string_view update) {
   stringstream ss;
   ss << update;
@@ -205,23 +217,30 @@ void Manager::on_update(string_view update) {
   try {
     json::read_json(ss, pt);
     string type = pt.get<string>("type");
-    cout << "Got update of type: " << type << endl;
+    cout << "Got update of type: " << type;
 
     if (type == GET_LISTS) {
+      cout << endl;
       get_lists();
       return;
     }
 
     unsigned list_id = pt.get<unsigned>("list_id");
+    cout << " " << list_id << endl;
 
     if (lists_.count(list_id) != 1) {
       CueList l(list_id, "untitled");
       lists_.insert({list_id, l});
     }
     auto found = lists_.find(list_id);
-    CueList& list = (*found).second;
+    CueList &list = (*found).second;
 
-    if (type == GET_LEVELS) {
+    if (type == RENAME_LIST) {
+      string name = pt.get<string>("name");
+      rename_list(list, name);
+    } else if (type == DELETE_LIST) {
+      delete_list(list);
+    } else if (type == GET_LEVELS) {
       get_levels(list);
     } else if (type == SET_LEVELS) {
       set_levels(list, pt.get_child("values"));

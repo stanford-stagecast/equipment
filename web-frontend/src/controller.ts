@@ -52,7 +52,6 @@ export default class Controller {
     let channel = message.data[1];
     let value = message.data[2]*2;
     if (channel > 8) {
-      console.log(channel);
       if (value === 0) {
         return;
       }

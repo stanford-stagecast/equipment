@@ -35,9 +35,3 @@
   transform: rotate(270deg) translateX(-50px);
   width: 75px;
 }
-
-.title {
-  text-align: center;
-  font-size: 16pt;
-  font-weight: bold;
-}

@@ -28,9 +28,12 @@ private:
   void restore_cue(CueList& list, unsigned q);
   void delete_cue(CueList& list, unsigned q);
   void list_cues(CueList& list);
-  void get_lists();
   void go_cue(CueList& list);
   void back_cue(CueList& list);
+
+  void get_lists();
+  void rename_list(CueList& list, std::string& name);
+  void delete_list(CueList& list);
 
   void reset_channel(CueList& list, unsigned channel);
   void track_channel(CueList& list, unsigned channel);

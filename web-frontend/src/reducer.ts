@@ -18,6 +18,8 @@ export default function reducer(state: AppState, action: Action): AppState {
       return update_channels(state, action.values);
     case 'update_lists':
       return update_lists(state, action.lists);
+    case 'switch_list':
+      return switch_list(state, action.id);
   }
 }
 
@@ -54,16 +56,33 @@ function update_channels(state: AppState, values: Channel[]): AppState {
       channels.push(channel.channel);
     }
   }
-  state.faders = new_faders;
-  return state;
+  return {...state, faders: new_faders};
 }
 
-function update_lists(state: AppState, lists: CueList[]): AppState {
-  state.lists = lists;
-  for (let l of state.lists) {
-    if (l.id === state.list_id) {
-      state.list_name = l.name;
+function update_lists(state: AppState, new_lists: CueList[]): AppState {
+  let lists = {
+    id: state.lists.id,
+    name: "loading",
+    lists: new_lists,
+  }
+  for (let l of lists.lists) {
+    if (l.id === state.lists.id) {
+      lists.name = l.name;
     }
   }
-  return state;
+  return {...state, lists};
+}
+
+function switch_list(state: AppState, id: number): AppState {
+  let lists = {
+    id,
+    name: "loading",
+    lists: state.lists.lists,
+  }
+  for (let l of lists.lists) {
+    if (l.id === state.lists.id) {
+      lists.name = l.name;
+    }
+  }
+  return {...state, lists};
 }

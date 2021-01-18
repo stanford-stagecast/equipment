@@ -25,6 +25,7 @@ type Action =
   | { type: 'update_cue_list', cues: number[] }
   | { type: 'update_channel', value: Channel}
   | { type: 'update_channels', values: Channel[] }
-  | { type: 'update_lists', lists: CueList[] };
+  | { type: 'update_lists', lists: CueList[] }
+  | { type: 'switch_list', id: number };
 
 export default Action;

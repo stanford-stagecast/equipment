@@ -63,8 +63,18 @@ export default function CueStatus({data, dispatch, server}: CueStatusProps) {
           <button className="_record" onClick={() => server.save_cue(cue_number, cue_time)}>
             Record
           </button>
+          <button className="_record" onClick={() => delete_cue(cue_number, server)}>
+            Delete
+          </button>
         </div>
       </div>
     </div>
   );
+}
+
+function delete_cue(q: number, server: Server) {
+  let confirmation = window.confirm(`Are you sure you want to delete cue #${q}?`);
+  if (confirmation === true) {
+    server.delete_cue(q);
+  }
 }

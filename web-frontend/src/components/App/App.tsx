@@ -1,11 +1,11 @@
-import React, {useState, useReducer, useEffect, useRef, MutableRefObject} from 'react';
+import React, {useReducer, useEffect, useRef, MutableRefObject} from 'react';
 import './App.css';
 import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
 import Server from '../../server';
 import CueStatus, {CueStatusData} from '../CueStatus/CueStatus';
-import {CueList} from '../../action';
 import Controller from '../../controller';
+import ListControls, {ListData} from '../ListControls/ListControls';
 
 
 /**
@@ -14,13 +14,11 @@ import Controller from '../../controller';
  * should probably be a union of "Loading", "Active", and "Error" states.
  */
 export type AppState = {
-  connected: boolean;
+  connected: boolean,
   cue: CueStatusData,
   cues: number[],
-  faders: FaderData[];
-  list_id: number,
-  list_name: string,
-  lists: CueList[],
+  faders: FaderData[],
+  lists: ListData,
 }
 
 /**
@@ -50,25 +48,32 @@ export const initialState: AppState = {
     {channel: 6, value: 0, status: 'manual'},
     {channel: 7, value: 0, status: 'manual'},
   ],
-  list_id: 0,
-  list_name: "N/A",
-  lists: [],
+  lists: {
+    id: 0,
+    name: "N/A",
+    lists: [],
+  }
 }
 
-/**
- * The Stagecast CueLab Frontend Application.  The entire application is
- * contained under here.
- */
 export default function App(_props: {}) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  let [audioMode, setAudioMode] = useState(false);
 
   const server: MutableRefObject<Server | null> = useRef(null);
   const controller: MutableRefObject<Controller | null> = useRef(null);
   useEffect(() => {
-    server.current = new Server(dispatch, state.list_id);
-    controller.current = new Controller(initialState, dispatch, server.current as Server);
-  }, [state.list_id]);
+    console.log("reeffect", state.lists.id);
+    {/* server.current?.disconnect(); */}
+    server.current = new Server(dispatch, state.lists.id);
+    return () => {
+      server.current?.disconnect();
+    }
+  }, [state.lists.id]);
+
+  useEffect(() => {
+    if (server.current) {
+      controller.current = new Controller(initialState, dispatch, server.current as Server);
+    }
+  }, [server]);
 
   if (server.current === null) {
     return <div>Loading...</div>
@@ -82,61 +87,15 @@ export default function App(_props: {}) {
 
   return (
     <div className="App">
-      <div className="controls">
-        <label>
-          Audio Mode:
-          <input type="checkbox" checked={audioMode} onChange={(e) => setAudioMode(e.target.checked)}/>
-        </label>
+      <ListControls data={state.lists} server={server.current as Server} dispatch={dispatch}/>
+      <div className="FaderBank">
+        {
+          state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
+            return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
+            })
+        }
       </div>
-      {
-        !audioMode ?
-        <>
-          <div className="title">
-            Cue List #{state.list_id}: "{state.list_name}"
-          </div>
-          <div className="FaderBank">
-            {
-              state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
-                return <Fader key={i} state_modified={state_modified} data={faderState} dispatch={dispatch} server={server.current as Server}/>
-                })
-            }
-          </div>
-          <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
-        </>
-        : <>
-          <div className="ChannelList">
-            {
-              (() => {
-                let n = state.faders.reduce((prev, curr) => curr.channel >= prev ? curr.channel : prev, 0);
-                n = Math.ceil((n+1) / 16) * 16;
-                const columns = 8;
-                const rows = n / 16;
-                let data = new Array(n).fill(0);
-                for (let channel of state.faders) {
-                  data[channel.channel] = channel.value;
-                }
-                let row_output = [];
-                for (let row = 0; row < rows; row++) {
-                  let column_output = [];
-                  for (let column = 0; column < columns; column++) {
-                    let level_index = row * 16 + column;
-                    let pan_index = row * 16 + column + 8;
-                    let level = data[level_index];
-                    let pan = data[pan_index];
-                    column_output.push(<span key={column} className="channel">
-                      {row}.{level_index % 16}
-                      <br/>
-                      <progress className="pan" value={pan} max="255"></progress>
-                      <progress className="intensity" value={level} max="255"></progress>
-                    </span>);
-                  }
-                  row_output.push(<div key={row} data-row={row} className="row">{column_output}</div>);
-                }
-                return row_output;
-              })()
-            }
-          </div>
-        </> }
+      <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
     </div>
   );
 }

@@ -1,10 +1,10 @@
 #ifndef CUELIST_HH
 #define CUELIST_HH
 
-#include <string>
-#include <map>
-#include <vector>
 #include "cue.hh"
+#include <map>
+#include <string>
+#include <vector>
 
 class CueList {
 public:
@@ -76,8 +76,8 @@ public:
   unsigned previous_cue();
   unsigned last_cue() { return last_cue_number_; }
   unsigned number() { return number_; }
-  std::string& name() { return name_; }
-
+  void set_name(std::string &name) { name_ = name; }
+  std::string &name() { return name_; }
 };
 
 #endif
