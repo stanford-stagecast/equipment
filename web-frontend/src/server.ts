@@ -5,6 +5,7 @@ const SERVER_URL: string = 'ws://localhost:8000';
 
 type GetLevels = {
   type: 'get-levels',
+  list_id: number,
   cue: {
     'current': string,
     'fade_time': string,
@@ -23,8 +24,19 @@ type GetLevels = {
   ]
 };
 
+type GetLists = {
+  type: 'get-lists',
+  lists: [
+    {
+      'number': string,
+      'name': string,
+    }
+  ]
+};
+
 type ListCues = {
   type: 'list-cues',
+  list_id: number,
   cue: string,
   cues: [
     {
@@ -33,16 +45,18 @@ type ListCues = {
   ]
 };
 
-type Message = GetLevels | ListCues;
+type Message = GetLevels | GetLists | ListCues;
 
 export default class Server {
   socket: WebSocket;
   dispatch: Dispatch<Action>;
   disconnect_timeout?: number;
+  list_id: number;
 
-  constructor(dispatch: Dispatch<Action>) {
+  constructor(dispatch: Dispatch<Action>, list_id: number) {
     this.dispatch = dispatch;
     this.socket = this.connect();
+    this.list_id = list_id;
   }
 
   private connect() {
@@ -74,10 +88,16 @@ export default class Server {
     window.clearTimeout(this.disconnect_timeout);
     this.disconnect_timeout = undefined;
     this.dispatch({type: 'connection_change', status: true});
-    let data = {type: 'get-levels'};
-    this.socket.send(JSON.stringify(data));
-    data = {type: 'list-cues'};
-    this.socket.send(JSON.stringify(data));
+    {
+      let data = {type: 'get-lists'};
+      this.socket.send(JSON.stringify(data));
+    }
+    {
+      let data = {type: 'get-levels', list_id: this.list_id};
+      this.socket.send(JSON.stringify(data));
+      data = {type: 'list-cues', list_id: this.list_id};
+      this.socket.send(JSON.stringify(data));
+    }
   }
 
   private onmessage(data: string) {
@@ -89,6 +109,9 @@ export default class Server {
           break;
         case 'list-cues':
           this.list_cues(msg);
+          break;
+        case 'get-lists':
+          this.get_lists(msg);
           break;
         default:
           console.log("Unrecognized message type!");
@@ -124,6 +147,19 @@ export default class Server {
     });
   }
 
+  private get_lists(msg: GetLists) {
+    let lists = msg.lists || [];
+    this.dispatch({
+      type: 'update_lists',
+      lists: lists.map((x) => {
+        return {
+          name: x.name,
+          id: parseInt(x.number)
+        }
+      }),
+    });
+  }
+
   private list_cues(msg: ListCues) {
     let cues = msg.cues || [];
     this.dispatch({
@@ -138,6 +174,7 @@ export default class Server {
     channel = Math.floor(channel);
     let data = {
       type: 'reset-channel',
+      list_id: this.list_id,
       channel,
     };
     this.socket.send(JSON.stringify(data));
@@ -147,6 +184,7 @@ export default class Server {
     channel = Math.floor(channel);
     let data = {
       type: 'block-channel',
+      list_id: this.list_id,
       channel,
     };
     this.socket.send(JSON.stringify(data));
@@ -156,6 +194,7 @@ export default class Server {
     channel = Math.floor(channel);
     let data = {
       type: 'track-channel',
+      list_id: this.list_id,
       channel,
     };
     this.socket.send(JSON.stringify(data));
@@ -166,6 +205,7 @@ export default class Server {
     value = Math.floor(value);
     let data = {
       type: 'set-levels',
+      list_id: this.list_id,
       values: [
         {
           channel,
@@ -180,6 +220,7 @@ export default class Server {
     cue = Math.floor(cue);
     let data = {
       type: 'save-cue',
+      list_id: this.list_id,
       cue,
       time,
     };
@@ -190,6 +231,7 @@ export default class Server {
     cue = Math.floor(cue);
     let data = {
       type: 'restore-cue',
+      list_id: this.list_id,
       cue,
     };
     this.socket.send(JSON.stringify(data));
@@ -198,6 +240,7 @@ export default class Server {
   go() {
     let data = {
       type: 'go-cue',
+      list_id: this.list_id,
     };
     this.socket.send(JSON.stringify(data));
   }
@@ -205,6 +248,7 @@ export default class Server {
   back() {
     let data = {
       type: 'back-cue',
+      list_id: this.list_id,
     };
     this.socket.send(JSON.stringify(data));
   }

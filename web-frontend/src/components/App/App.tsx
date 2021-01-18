@@ -4,6 +4,7 @@ import reducer from '../../reducer';
 import Fader, {FaderData} from '../Fader/Fader';
 import Server from '../../server';
 import CueStatus, {CueStatusData} from '../CueStatus/CueStatus';
+import {CueList} from '../../action';
 import Controller from '../../controller';
 
 
@@ -17,6 +18,9 @@ export type AppState = {
   cue: CueStatusData,
   cues: number[],
   faders: FaderData[];
+  list_id: number,
+  list_name: string,
+  lists: CueList[],
 }
 
 /**
@@ -45,7 +49,10 @@ export const initialState: AppState = {
     {channel: 5, value: 0, status: 'manual'},
     {channel: 6, value: 0, status: 'manual'},
     {channel: 7, value: 0, status: 'manual'},
-  ]
+  ],
+  list_id: 0,
+  list_name: "N/A",
+  lists: [],
 }
 
 /**
@@ -54,14 +61,14 @@ export const initialState: AppState = {
  */
 export default function App(_props: {}) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  let [audioMode, setAudioMode] = useState(true);
+  let [audioMode, setAudioMode] = useState(false);
 
   const server: MutableRefObject<Server | null> = useRef(null);
   const controller: MutableRefObject<Controller | null> = useRef(null);
   useEffect(() => {
-    server.current = new Server(dispatch);
+    server.current = new Server(dispatch, state.list_id);
     controller.current = new Controller(initialState, dispatch, server.current as Server);
-  }, []);
+  }, [state.list_id]);
 
   if (server.current === null) {
     return <div>Loading...</div>
@@ -84,6 +91,9 @@ export default function App(_props: {}) {
       {
         !audioMode ?
         <>
+          <div className="title">
+            Cue List #{state.list_id}: "{state.list_name}"
+          </div>
           <div className="FaderBank">
             {
               state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {

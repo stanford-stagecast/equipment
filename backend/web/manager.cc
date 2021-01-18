@@ -4,35 +4,39 @@
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
 #include <queue>
+#include <optional>
+
+using namespace std;
 
 static const unsigned CYCLE_TIME_MS = 25;
 
 namespace json = boost::property_tree;
 
-static const std::string GET_LEVELS = "get-levels";
-static const std::string SET_LEVELS = "set-levels";
-static const std::string RESET_CHANNEL = "reset-channel";
-static const std::string TRACK_CHANNEL = "track-channel";
-static const std::string BLOCK_CHANNEL = "block-channel";
-static const std::string SAVE_CUE = "save-cue";
-static const std::string RESTORE_CUE = "restore-cue";
-static const std::string GO_CUE = "go-cue";
-static const std::string BACK_CUE = "back-cue";
-static const std::string DELETE_CUE = "delete-cue";
-static const std::string LIST_CUES = "list-cues";
+static const string GET_LISTS = "get-lists";
+static const string GET_LEVELS = "get-levels";
+static const string SET_LEVELS = "set-levels";
+static const string RESET_CHANNEL = "reset-channel";
+static const string TRACK_CHANNEL = "track-channel";
+static const string BLOCK_CHANNEL = "block-channel";
+static const string SAVE_CUE = "save-cue";
+static const string RESTORE_CUE = "restore-cue";
+static const string GO_CUE = "go-cue";
+static const string BACK_CUE = "back-cue";
+static const string DELETE_CUE = "delete-cue";
+static const string LIST_CUES = "list-cues";
 
-Manager::Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context &ioc)
+Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc)
     : dispatcher_(dispatcher), ioc_(ioc),
       timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)),
       transmitter_(ioc, net::ip::make_address("127.0.0.1"), 0) {
-  tick_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now().time_since_epoch());
+  tick_time_ = chrono::duration_cast<chrono::milliseconds>(
+      chrono::system_clock::now().time_since_epoch());
   timer_.async_wait(boost::bind(&Manager::tick, this));
 }
 
 void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 
-std::string status_message(CueList::cue_status_t status) {
+string status_message(CueList::cue_status_t status) {
   switch (status) {
   case (CueList::MANUAL):
     return "manual";
@@ -45,11 +49,11 @@ std::string status_message(CueList::cue_status_t status) {
   case (CueList::BLOCKED):
     return "blocked";
   }
-  std::cerr << "Unknown status: " << status << std::endl;
+  cerr << "Unknown status: " << status << endl;
   return "unknown";
 }
 
-void Manager::get_levels() {
+void Manager::get_levels(CueList& list_) {
   json::ptree root;
   json::ptree values;
   json::ptree cue_info;
@@ -62,9 +66,9 @@ void Manager::get_levels() {
     current.put("value", info.level);
     current.put("status", status_message(info.status));
     if (info.channel < 512) {
-      universe[info.channel] = std::clamp(info.level, 0, 255);
+      universe[info.channel] = clamp(info.level, 0, 255);
     }
-    values.push_back(std::make_pair("", current));
+    values.push_back(make_pair("", current));
   }
 
   {
@@ -82,35 +86,38 @@ void Manager::get_levels() {
   root.put_child("cue", cue_info);
   root.put_child("values", values);
 
-  std::stringstream ss;
+  stringstream ss;
   json::write_json(ss, root);
   transmitter_.update(universe);
-  dispatcher_->do_update(std::string_view(ss.str()));
+  dispatcher_->do_update(string_view(ss.str()));
 }
 
-void Manager::set_levels(boost::property_tree::ptree values) {
-  for (auto const &x : values) {
+void Manager::set_levels(CueList& list_, boost::property_tree::ptree values) {
+  for (auto &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
     int value = node.get<int>("value");
     list_.set_level(channel, value);
   }
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::save_cue(unsigned q, float time) {
+void Manager::save_cue(CueList& list_, unsigned q, float time) {
   list_.record_cue(q, time);
-  list_cues();
-  get_levels();
+  list_cues(list_);
+  get_levels(list_);
 }
 
 void Manager::tick() {
-  std::chrono::milliseconds now =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  if (list_.fade_progress().has_value()) {
-    list_.tick((now - tick_time_).count());
-    get_levels();
+  chrono::milliseconds now =
+      chrono::duration_cast<chrono::milliseconds>(
+          chrono::system_clock::now().time_since_epoch());
+  for (auto& x : lists_) {
+    CueList& list_ = x.second;
+    if (list_.fade_progress().has_value()) {
+      list_.tick((now - tick_time_).count());
+      get_levels(list_);
+    }
   }
   transmitter_.tick((now - tick_time_).count());
   tick_time_ = now;
@@ -119,101 +126,134 @@ void Manager::tick() {
   timer_.async_wait(boost::bind(&Manager::tick, this));
 }
 
-void Manager::restore_cue(unsigned q) {
+void Manager::restore_cue(CueList& list_, unsigned q) {
   list_.go_to_cue(q);
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::go_cue() {
+void Manager::go_cue(CueList& list_) {
   list_.go();
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::back_cue() {
+void Manager::back_cue(CueList& list_) {
   list_.back();
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::reset_channel(unsigned channel) {
-  list_.set_level(channel, std::nullopt);
-  get_levels();
+void Manager::reset_channel(CueList& list_, unsigned channel) {
+  list_.set_level(channel, nullopt);
+  get_levels(list_);
 }
 
-void Manager::track_channel(unsigned channel) {
+void Manager::track_channel(CueList& list_, unsigned channel) {
   list_.track(channel);
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::block_channel(unsigned channel) {
+void Manager::block_channel(CueList& list_, unsigned channel) {
   list_.block(channel);
-  get_levels();
+  get_levels(list_);
 }
 
-void Manager::delete_cue(unsigned q) {
+void Manager::delete_cue(CueList& list_, unsigned q) {
   list_.delete_cue(q);
-  get_levels();
-  list_cues();
+  get_levels(list_);
+  list_cues(list_);
 }
 
-void Manager::list_cues() {
+void Manager::list_cues(CueList& list_) {
   json::ptree root;
   json::ptree cues;
-  for (auto const &x : list_.cue_info()) {
+  for (auto &x : list_.cue_info()) {
     json::ptree current;
     current.put("number", x.number);
     current.put("time", x.fade_time);
-    cues.push_back(std::make_pair("", current));
+    cues.push_back(make_pair("", current));
   }
   root.put("type", LIST_CUES);
   root.put("cue", list_.cue());
   root.put_child("cues", cues);
 
-  std::stringstream ss;
+  stringstream ss;
   json::write_json(ss, root);
-  dispatcher_->do_update(std::string_view(ss.str()));
+  dispatcher_->do_update(string_view(ss.str()));
 }
 
-void Manager::on_update(std::string_view update) {
-  std::stringstream ss;
+void Manager::get_lists() {
+  json::ptree root;
+  json::ptree lists;
+  for (auto& x : lists_) {
+    CueList& l = x.second;
+    json::ptree current;
+    current.put("number", l.number());
+    current.put("name", l.name());
+    lists.push_back(make_pair("", current));
+  }
+  root.put("type", GET_LISTS);
+  root.put_child("lists", lists);
+
+  stringstream ss;
+  json::write_json(ss, root);
+  dispatcher_->do_update(string_view(ss.str()));
+}
+
+void Manager::on_update(string_view update) {
+  stringstream ss;
   ss << update;
   json::ptree pt;
   try {
     json::read_json(ss, pt);
-    std::string type = pt.get<std::string>("type");
-    std::cout << "Got update of type: " << type << std::endl;
+    string type = pt.get<string>("type");
+    cout << "Got update of type: " << type << endl;
+
+    if (type == GET_LISTS) {
+      get_lists();
+      return;
+    }
+
+    unsigned list_id = pt.get<unsigned>("list_id");
+
+    if (lists_.count(list_id) != 1) {
+      CueList l(list_id, "untitled");
+      lists_.insert({list_id, l});
+    }
+    auto found = lists_.find(list_id);
+    CueList& list = (*found).second;
+
     if (type == GET_LEVELS) {
-      get_levels();
+      get_levels(list);
     } else if (type == SET_LEVELS) {
-      set_levels(pt.get_child("values"));
+      set_levels(list, pt.get_child("values"));
     } else if (type == RESET_CHANNEL) {
-      reset_channel(pt.get<unsigned>("channel"));
+      reset_channel(list, pt.get<unsigned>("channel"));
     } else if (type == TRACK_CHANNEL) {
-      track_channel(pt.get<unsigned>("channel"));
+      track_channel(list, pt.get<unsigned>("channel"));
     } else if (type == BLOCK_CHANNEL) {
-      block_channel(pt.get<unsigned>("channel"));
+      block_channel(list, pt.get<unsigned>("channel"));
     } else if (type == SAVE_CUE) {
-      save_cue(pt.get<int>("cue"), pt.get<float>("time"));
+      save_cue(list, pt.get<int>("cue"), pt.get<float>("time"));
     } else if (type == RESTORE_CUE) {
-      restore_cue(pt.get<int>("cue"));
+      restore_cue(list, pt.get<int>("cue"));
     } else if (type == LIST_CUES) {
-      list_cues();
+      list_cues(list);
     } else if (type == GO_CUE) {
-      go_cue();
+      go_cue(list);
     } else if (type == BACK_CUE) {
-      back_cue();
+      back_cue(list);
     } else if (type == DELETE_CUE) {
-      delete_cue(pt.get<unsigned>("cue"));
+      delete_cue(list, pt.get<unsigned>("cue"));
     } else {
-      std::cerr << "Invalid type: " << type << std::endl;
+      cerr << "Invalid type: " << type << endl;
     }
   } catch (json::json_parser::json_parser_error &e) {
-    std::cerr << "Ignoring invalid JSON. [" << e.what() << "]" << std::endl;
+    cerr << "Ignoring invalid JSON. [" << e.what() << "]" << endl;
     return;
   } catch (json::ptree_bad_path &e) {
-    std::cerr << "Ignoring incomplete JSON. [" << e.what() << "]" << std::endl;
+    cerr << "Ignoring incomplete JSON. [" << e.what() << "]" << endl;
     return;
   } catch (json::ptree_bad_data &e) {
-    std::cerr << "Ignoring unparsable JSON. [" << e.what() << "]" << std::endl;
+    cerr << "Ignoring unparsable JSON. [" << e.what() << "]" << endl;
     return;
   }
 }

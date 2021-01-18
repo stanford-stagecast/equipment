@@ -4,6 +4,11 @@ export type Channel = {
   status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
 };
 
+export type CueList = {
+  name: string,
+  id: number,
+};
+
 export type CueStatusData = {
   current: number,
   fade_time: number,
@@ -19,6 +24,7 @@ type Action =
   | { type: 'update_cue', cue: CueStatusData }
   | { type: 'update_cue_list', cues: number[] }
   | { type: 'update_channel', value: Channel}
-  | { type: 'update_channels', values: Channel[] };
+  | { type: 'update_channels', values: Channel[] }
+  | { type: 'update_lists', lists: CueList[] };
 
 export default Action;

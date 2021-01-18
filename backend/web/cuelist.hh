@@ -76,6 +76,7 @@ public:
   unsigned previous_cue();
   unsigned last_cue() { return last_cue_number_; }
   unsigned number() { return number_; }
+  std::string& name() { return name_; }
 
 };
 

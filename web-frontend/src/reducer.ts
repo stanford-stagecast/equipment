@@ -1,4 +1,4 @@
-import Action, {Channel} from './action';
+import Action, {Channel, CueList} from './action';
 import {AppState} from './components/App/App';
 
 /**
@@ -16,6 +16,8 @@ export default function reducer(state: AppState, action: Action): AppState {
       return update_channel(state, action.value);
     case 'update_channels':
       return update_channels(state, action.values);
+    case 'update_lists':
+      return update_lists(state, action.lists);
   }
 }
 
@@ -53,5 +55,15 @@ function update_channels(state: AppState, values: Channel[]): AppState {
     }
   }
   state.faders = new_faders;
+  return state;
+}
+
+function update_lists(state: AppState, lists: CueList[]): AppState {
+  state.lists = lists;
+  for (let l of state.lists) {
+    if (l.id === state.list_id) {
+      state.list_name = l.name;
+    }
+  }
   return state;
 }
