@@ -11,6 +11,7 @@ export type CueStatusData = ActionCueStatusData;
  */
 type CueStatusProps = {
   data: CueStatusData;
+  cues: number[],
   dispatch: Dispatch<Action>;
   server: Server;
 }
@@ -19,7 +20,7 @@ type CueStatusProps = {
  * Represents a basic one-channel input (e.g. a single channel's volume or a
  * single dimmer's intensity).
  */
-export default function CueStatus({data, dispatch, server}: CueStatusProps) {
+export default function CueStatus({data, dispatch, cues, server}: CueStatusProps) {
   let [cue_number, set_cue_number] = useState(data.current);
   let [saved_cue_number, set_saved_cue_number] = useState(data.current);
   let [cue_time, set_cue_time] = useState(data.fade_time);
@@ -63,9 +64,20 @@ export default function CueStatus({data, dispatch, server}: CueStatusProps) {
           <button className="_record" onClick={() => server.save_cue(cue_number, cue_time)}>
             Record
           </button>
-          <button className="_record" onClick={() => delete_cue(cue_number, server)}>
-            Delete
-          </button>
+          <div>
+            <button className="_delete" onClick={() => delete_cue(cue_number, server)}>
+              Delete
+            </button>
+            <select className="_go_to_q" value={cue_number} disabled={cues.length === 0} onChange={(e) => server.restore_cue(parseInt(e.target.value))}>
+              {
+                cues.length === 0 ?
+                <option>No cues.</option>
+                : cues.map(x => {
+                  return <option key={x} value={x}>Go to {x}</option>
+                })
+              }
+            </select>
+          </div>
         </div>
       </div>
     </div>

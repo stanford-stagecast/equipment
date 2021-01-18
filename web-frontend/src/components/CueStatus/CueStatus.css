@@ -1,6 +1,6 @@
 .CueStatus {
   display: flex;
-  margin: 100px;
+  margin: 50px 0 0 75px;
   flex-direction: column;
   max-width: 300px;
 }
@@ -54,4 +54,18 @@
   margin-left: 10px;
   margin-bottom: 10px;
   float: right;
+}
+
+._record {
+  font-size: 16pt;
+}
+
+._delete {
+  width: 50%;
+  display: inline-block;
+}
+
+._go_to_q {
+  width: 50%;
+  display: inline-block;
 }

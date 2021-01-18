@@ -62,7 +62,6 @@ export default function App(_props: {}) {
   const controller: MutableRefObject<Controller | null> = useRef(null);
   useEffect(() => {
     console.log("reeffect", state.lists.id);
-    {/* server.current?.disconnect(); */}
     server.current = new Server(dispatch, state.lists.id);
     return () => {
       server.current?.disconnect();
@@ -95,7 +94,7 @@ export default function App(_props: {}) {
             })
         }
       </div>
-      <CueStatus data={state.cue} dispatch={dispatch} server={server.current as Server}/>
+      <CueStatus data={state.cue} cues={state.cues} dispatch={dispatch} server={server.current as Server}/>
     </div>
   );
 }
