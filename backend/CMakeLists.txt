@@ -27,6 +27,9 @@ add_subdirectory(mixer)
 # CLI MIDI client
 add_subdirectory(cli)
 
+# DMX transmitter
+add_subdirectory(dmx)
+
 # Tests
 add_subdirectory(tests)
 include(tests.cmake)

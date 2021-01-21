@@ -21,11 +21,11 @@ using namespace std;
 
 void validate_arguments(int argc) {
   if (argc != 5) {
-    cout << "Usage: cli midi_device server port user" << endl;
+    cout << "Usage: cli midi_device server port list" << endl;
     cout << "midi_device: /dev/midi*" << endl;
     cout << "server: hostname or IP of server" << endl;
     cout << "port: websocket port" << endl;
-    cout << "user: user number in [0, 31]; 0 = operator, 1-31 = actor/musician" << endl;
+    cout << "list: 1-indexed cue list number (from web UI)" << endl;
     exit(0);
   }
 }
@@ -68,50 +68,57 @@ map<uint8_t, uint8_t> changes{};
 mutex changes_mutex;
 condition_variable ws_signal;
 
-void ws_thread(string server_name, string port) {
+void ws_thread(string server_name, string port, int list) {
   net::io_context ioc;
-  stream<tcp::socket> ws(ioc);
-  open_websocket(ioc, ws, server_name, port);
+  for (;;) {
+    try {
+      stream<tcp::socket> ws(ioc);
+      open_websocket(ioc, ws, server_name, port);
 
-  // whenever changes are available, 
-  while (true) {
-    map<uint8_t, uint8_t> local;
-    {
-      unique_lock<mutex> lock(changes_mutex);
-      if (changes.size() == 0) {
-        ws_signal.wait(lock);
+      // whenever changes are available, 
+      while (true) {
+        map<uint8_t, uint8_t> local;
+        {
+          unique_lock<mutex> lock(changes_mutex);
+          if (changes.size() == 0) {
+            ws_signal.wait(lock);
+          }
+          local = changes;
+          changes.clear();
+        }
+
+        if (local.size() == 0) {
+          continue;
+        }
+        pt::ptree json;
+        json.put("type", "set-levels");
+        pt::ptree array;
+        for (auto x : local) {
+          pt::ptree current;
+          current.put("channel", x.first);
+          current.put("value", x.second);
+          array.push_back(std::make_pair("", current));
+        }
+        json.put_child("values", array);
+        json.put("list_id", list - 1);
+        stringstream ss;
+        pt::write_json(ss, json);
+        string s = ss.str();
+        ws.write(net::buffer(s));
+
+        // only one update every 10ms
+        this_thread::sleep_for(chrono::milliseconds(10));
       }
-      local = changes;
-      changes.clear();
+    } catch (boost::system::system_error& e) {
+      cerr << e.what() << endl;
+      this_thread::sleep_for(chrono::seconds(1));
     }
-
-    if (local.size() == 0) {
-      continue;
-    }
-    pt::ptree json;
-    json.put("type", "set-levels");
-    pt::ptree array;
-    for (auto x : local) {
-      pt::ptree current;
-      current.put("channel", x.first);
-      current.put("value", x.second);
-      array.push_back(std::make_pair("", current));
-    }
-    json.put_child("values", array);
-    stringstream ss;
-    pt::write_json(ss, json);
-    string s = ss.str();
-    ws.write(net::buffer(s));
-
-    // only one update every 10ms
-    this_thread::sleep_for(chrono::milliseconds(10));
   }
 }
 
-void midi_thread(string device, int user) {
+void midi_thread(string device) {
   ifstream midi;
   open_midi(midi, device);
-  cout << "Levels " << 16 * user << "-" << 16 * (user + 1) - 1 << " are being synchronized." << endl;
 
   // continuously get MIDI messages and send them to the other thread,
   // overwriting old messages if they haven't been read yet
@@ -121,7 +128,7 @@ void midi_thread(string device, int user) {
     if (status != 0xB0) {
       cout << "Unknown MIDI message status: " << status << endl;
     }
-    uint8_t output_channel = 16 * user;
+    uint8_t output_channel = 0;
     if (channel < 8) {
       output_channel += channel;
     } else if (channel >= 16 && channel < 24) {
@@ -142,13 +149,13 @@ int main(int argc, char **argv) {
   string device = argv[1];
   string server_name = argv[2];
   string port = argv[3];
-  int user = stoi(argv[4]);
+  int list = stoi(argv[4]);
   cout << "Using MIDI device: <" << device << ">" << endl;
   cout << "Using server: <" << server_name << ":" << port << ">" << endl;
-  cout << "Using user: <" << user << ">" << endl;
+  cout << "Using cue list: <" << list << ">" << endl;
 
-  thread ws(ws_thread, server_name, port);
-  thread midi(midi_thread, device, user);
+  thread ws(ws_thread, server_name, port, list);
+  thread midi(midi_thread, device);
 
   ws.join();
   midi.join();

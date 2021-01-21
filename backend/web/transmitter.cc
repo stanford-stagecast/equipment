@@ -50,8 +50,8 @@ std::array<uint8_t, sizeof(dmx_msg)> serialize_packet(unsigned universe,
                                           uint64_t seqno) {
   dmx_msg msg;
   memcpy(&msg.magic, "Stagecast", 10);
-  msg.seqno = htons(seqno);
-  msg.universe = htons(universe);
+  msg.seqno = seqno;
+  msg.universe = universe;
   memcpy(&msg.data, levels.data(), 512);
 
   std::array<uint8_t, sizeof(dmx_msg)> array;
