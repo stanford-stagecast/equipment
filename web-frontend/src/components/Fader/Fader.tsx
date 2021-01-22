@@ -30,6 +30,11 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
     <div className="Fader">
       <p className={"_text _" + data.status}>
         {data.channel}: {Math.round(data.value/255 * 100)}
+        <br/>
+        <button
+          onClick={() => hide_channel(data.channel, server)}>
+          Hide
+        </button>
       </p>
       <br/>
       <input
@@ -70,4 +75,11 @@ function fader_changed(target: HTMLInputElement, data: FaderData, server: Server
       value: parseInt(target.value),
     }
   });
+}
+
+function hide_channel(channel: number, server: Server) {
+  let confirmation = window.confirm(`Disabling channel ${channel} will hide it and turn off its output (over DMX or into the mixer). Please confirm.`);
+  if (confirmation) {
+    server.hide_channel(channel);
+  }
 }

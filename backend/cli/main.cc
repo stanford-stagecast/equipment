@@ -61,6 +61,10 @@ void read_midi_message(ifstream& midi, uint8_t& status, uint8_t& channel, uint8_
 void open_midi(ifstream& midi, string device) {
   cout << "Connecting to MIDI controller" << endl;
   midi.open(device);
+  if (!midi.is_open()) {
+    cerr << "Unable to connect to MIDI controller!" << endl;
+    exit(1);
+  }
   cout << "MIDI controller connected!" << endl;
 }
 

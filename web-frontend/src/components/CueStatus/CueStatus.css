@@ -1,6 +1,5 @@
 .CueStatus {
   display: flex;
-  margin: 50px 0 0 75px;
   flex-direction: column;
   max-width: 300px;
 }

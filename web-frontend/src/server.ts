@@ -229,6 +229,26 @@ export default class Server {
     this.socket.send(JSON.stringify(data));
   }
 
+  show_channel(channel: number) {
+    channel = Math.floor(channel);
+    let data = {
+      type: 'show-channel',
+      list_id: this.list_id,
+      channel,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  hide_channel(channel: number) {
+    channel = Math.floor(channel);
+    let data = {
+      type: 'hide-channel',
+      list_id: this.list_id,
+      channel,
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
   set_level(channel: number, value: number) {
     channel = Math.floor(channel);
     value = Math.floor(value);

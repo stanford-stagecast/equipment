@@ -40,13 +40,6 @@ export const initialState: AppState = {
   cues: [],
   faders: [
     {channel: 0, value: 0, status: 'manual'},
-    {channel: 1, value: 0, status: 'manual'},
-    {channel: 2, value: 0, status: 'manual'},
-    {channel: 3, value: 0, status: 'manual'},
-    {channel: 4, value: 0, status: 'manual'},
-    {channel: 5, value: 0, status: 'manual'},
-    {channel: 6, value: 0, status: 'manual'},
-    {channel: 7, value: 0, status: 'manual'},
   ],
   lists: {
     id: 0,
@@ -93,8 +86,22 @@ export default function App(_props: {}) {
             })
         }
       </div>
+      <br/>
+      <button onClick={() => show_channel(server.current as Server)}>Show Hidden Channel</button>
       <CueStatus data={state.cue} cues={state.cues} dispatch={dispatch} server={server.current as Server}/>
       <button onClick={() => server.current?.save_to_disk()}>Save to Disk</button>
     </div>
   );
+}
+
+function show_channel(server: Server) {
+  let channel = prompt("Enter a channel number to enable");
+  if (!channel) {
+    return;
+  }
+  let num = parseInt(channel);
+  if (num === undefined) {
+    return;
+  }
+  server.show_channel(num);
 }

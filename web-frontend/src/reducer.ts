@@ -47,15 +47,6 @@ function update_channel(state: AppState, value: Channel): AppState {
 
 function update_channels(state: AppState, values: Channel[]): AppState {
   let new_faders = values;
-  let channels = new_faders.map(x => x.channel);
-  for (let channel of state.faders) {
-    if (channels.indexOf(channel.channel) === -1) {
-      channel.value = 0;
-      channel.status = "manual";
-      new_faders.push(channel);
-      channels.push(channel.channel);
-    }
-  }
   return {...state, faders: new_faders};
 }
 

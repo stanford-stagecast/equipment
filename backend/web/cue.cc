@@ -1,9 +1,6 @@
 #include "cue.hh"
 
 void Cue::set_level(channel_t channel, boost::optional<level_t> level) {
-  if (channel >= 512) {
-    return;
-  }
   if (levels_.size() <= channel) {
     levels_.resize(channel + 1);
   }

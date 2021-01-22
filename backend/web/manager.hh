@@ -40,6 +40,8 @@ private:
   void reset_channel(CueList& list, unsigned channel);
   void track_channel(CueList& list, unsigned channel);
   void block_channel(CueList& list, unsigned channel);
+  void show_channel(CueList& list, unsigned channel);
+  void hide_channel(CueList& list, unsigned channel);
 
   void save_to_disk();
 public:

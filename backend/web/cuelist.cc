@@ -1,27 +1,33 @@
 #include "cuelist.hh"
+#include <iostream>
 
-CueList::CueList(unsigned number, std::string name)
+using namespace std;
+
+CueList::CueList(unsigned number, string name)
   : number_(number), name_(name) {}
 
-std::vector<CueList::level_info_t> CueList::current_levels() {
-  std::vector<level_info_t> levels;
+vector<CueList::level_info_t> CueList::current_levels() {
+  vector<level_info_t> levels;
   unsigned q = current_cue_number_;
 
   if (cues_.size() == 0) {
     // No cues saved; default to only manual overrides (if there are any).
-    for (auto const &manual : level_overrides_) {
+    for (unsigned i = 0; i < MAX_CHANNELS; i++) {
+      if (i >= visibility_.size() || !visibility_[i]) continue;
       level_info_t info;
+      info.level = 0;
       info.status = MANUAL;
-      info.channel = manual.first;
-      info.level = manual.second;
+      info.channel = i;
+      if (level_overrides_.count(i)) {
+        info.level = level_overrides_[i];
+      }
       levels.push_back(info);
     }
     return levels;
   }
 
-  unsigned channels = max_known_channel_ + 1;
-
-  for (unsigned i = 0; i < channels; i++) {
+  for (unsigned i = 0; i < MAX_CHANNELS; i++) {
+    if (i >= visibility_.size() || !visibility_[i]) continue;
     Cue::level_t next = get_tracked_level_at(q, i);
     Cue::level_t previous = get_tracked_level_at(q - 1, i);
     level_info_t info;
@@ -59,9 +65,8 @@ std::vector<CueList::level_info_t> CueList::current_levels() {
   return levels;
 }
 
-void CueList::set_level(Cue::channel_t channel,
-                        boost::optional<Cue::level_t> level) {
-  max_known_channel_ = std::max(max_known_channel_, channel);
+void CueList::set_level(Cue::channel_t channel, boost::optional<Cue::level_t> level) {
+  if (channel >= MAX_CHANNELS) return;
   if (level.has_value()) {
     level_overrides_[channel] = *level;
   } else if (level_overrides_.count(channel)) {
@@ -82,6 +87,23 @@ void CueList::block(Cue::channel_t channel) {
       channel, get_tracked_level_at(current_cue_number_, channel));
 }
 
+void CueList::show(Cue::channel_t channel) {
+  if (channel >= MAX_CHANNELS) return;
+  if (channel >= visibility_.size()) {
+    visibility_.resize(channel + 1);
+  }
+  visibility_[channel] = true;
+}
+
+void CueList::hide(Cue::channel_t channel) {
+  if (channel >= MAX_CHANNELS) return;
+  level_overrides_.erase(channel);
+  if (channel >= visibility_.size()) {
+    visibility_.resize(channel + 1);
+  }
+  visibility_[channel] = false;
+}
+
 void CueList::back() { go_to_cue(previous_cue()); }
 
 void CueList::go() { go_to_cue(next_cue()); }
@@ -99,7 +121,7 @@ void CueList::go_to_cue(unsigned int q) {
   if (!cue)
     return;
 
-  std::vector<level_info_t> current = current_levels();
+  vector<level_info_t> current = current_levels();
   Cue::levels_t levels;
   for (auto const &info : current) {
     Cue::channel_t channel = info.channel;
@@ -121,7 +143,7 @@ void CueList::go_to_cue(unsigned int q) {
 }
 
 void CueList::record_cue(unsigned q, float time) {
-  std::vector<level_info_t> info = current_levels();
+  vector<level_info_t> info = current_levels();
   boost::optional<Cue> old_cue(boost::none);
 
   Cue::levels_t levels;
@@ -155,8 +177,8 @@ void CueList::delete_cue(unsigned q) {
   cues_[q].swap(none);
 }
 
-std::vector<CueList::cue_info_t> CueList::cue_info() {
-  std::vector<CueList::cue_info_t> cues;
+vector<CueList::cue_info_t> CueList::cue_info() {
+  vector<CueList::cue_info_t> cues;
   for (size_t i = 0; i < cues_.size(); i++) {
     boost::optional<Cue> cue = cues_[i];
     if (!cue)

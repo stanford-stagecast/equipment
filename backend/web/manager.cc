@@ -12,20 +12,29 @@ static const unsigned CYCLE_TIME_MS = 25;
 
 namespace json = boost::property_tree;
 
+// List operations
 static const string GET_LISTS = "get-lists";
 static const string RENAME_LIST = "rename-list";
 static const string DELETE_LIST = "delete-list";
+
+// Cue operations
+static const string LIST_CUES = "list-cues";
 static const string GET_LEVELS = "get-levels";
 static const string SET_LEVELS = "set-levels";
+static const string SAVE_CUE = "save-cue";
+static const string RESTORE_CUE = "restore-cue";
+
+// Channel operations
 static const string RESET_CHANNEL = "reset-channel";
 static const string TRACK_CHANNEL = "track-channel";
 static const string BLOCK_CHANNEL = "block-channel";
-static const string SAVE_CUE = "save-cue";
-static const string RESTORE_CUE = "restore-cue";
+static const string SHOW_CHANNEL = "show-channel";
+static const string HIDE_CHANNEL = "hide-channel";
+
+// Show Control
 static const string GO_CUE = "go-cue";
 static const string BACK_CUE = "back-cue";
 static const string DELETE_CUE = "delete-cue";
-static const string LIST_CUES = "list-cues";
 static const string SAVE_TO_DISK = "save-to-disk";
 
 Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::string filename, int dmx_port)
@@ -91,6 +100,7 @@ void Manager::get_levels(CueList &list_) {
     current.put("channel", info.channel);
     current.put("value", info.level);
     current.put("status", status_message(info.status));
+    current.put("visible", info.visible);
     if (info.channel < 512) {
       universe[info.channel] = clamp(info.level, 0, 255);
     }
@@ -178,6 +188,16 @@ void Manager::track_channel(CueList &list_, unsigned channel) {
 
 void Manager::block_channel(CueList &list_, unsigned channel) {
   list_.block(channel);
+  get_levels(list_);
+}
+
+void Manager::show_channel(CueList &list_, unsigned channel) {
+  list_.show(channel);
+  get_levels(list_);
+}
+
+void Manager::hide_channel(CueList &list_, unsigned channel) {
+  list_.hide(channel);
   get_levels(list_);
 }
 
@@ -279,6 +299,10 @@ void Manager::on_update(string_view update) {
       track_channel(list, pt.get<unsigned>("channel"));
     } else if (type == BLOCK_CHANNEL) {
       block_channel(list, pt.get<unsigned>("channel"));
+    } else if (type == SHOW_CHANNEL) {
+      show_channel(list, pt.get<unsigned>("channel"));
+    } else if (type == HIDE_CHANNEL) {
+      hide_channel(list, pt.get<unsigned>("channel"));
     } else if (type == SAVE_CUE) {
       save_cue(list, pt.get<int>("cue"), pt.get<float>("time"));
     } else if (type == RESTORE_CUE) {

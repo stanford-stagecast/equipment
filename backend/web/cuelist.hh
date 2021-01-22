@@ -8,6 +8,8 @@
 #include <vector>
 #include <boost/optional.hpp>
 
+#define MAX_CHANNELS 512
+
 class CueList {
 public:
   typedef struct {
@@ -27,6 +29,7 @@ public:
     Cue::channel_t channel;
     Cue::level_t level;
     cue_status_t status;
+    bool visible;
   } level_info_t;
 
 private:
@@ -36,8 +39,8 @@ private:
     {
       (void) version;
       ar & BOOST_SERIALIZATION_NVP(cues_);
-      ar & BOOST_SERIALIZATION_NVP(max_known_channel_);
       ar & BOOST_SERIALIZATION_NVP(number_);
+      ar & BOOST_SERIALIZATION_NVP(visibility_);
       ar & BOOST_SERIALIZATION_NVP(name_);
       ar & BOOST_SERIALIZATION_NVP(last_cue_number_);
       ar & BOOST_SERIALIZATION_NVP(current_cue_number_);
@@ -50,14 +53,13 @@ private:
   } tracking_state_t;
 
   std::vector<boost::optional<Cue>> cues_{};
+  std::vector<bool> visibility_ = {};
   unsigned current_cue_number_{0};
 
   std::map<Cue::channel_t, Cue::level_t> level_overrides_{};
 
   unsigned number_;
   std::string name_;
-
-  unsigned max_known_channel_{7};
 
   bool is_fading_{false};
   float fade_time_left_{0};
@@ -78,6 +80,8 @@ public:
   void set_level(Cue::channel_t channel, boost::optional<Cue::level_t> level);
   void track(Cue::channel_t channel);
   void block(Cue::channel_t channel);
+  void show(Cue::channel_t channel);
+  void hide(Cue::channel_t channel);
   void back();
   void go();
   void go_to_cue(unsigned q);
