@@ -7,8 +7,18 @@
 
 Client::Client(std::shared_ptr<ssl::context> ctx, tcp::socket &&socket,
                std::shared_ptr<Dispatcher> dispatcher)
-    : ctx_{ctx}, ws_(std::move(socket), *ctx_), buffer_(), queue_(), dispatcher_(dispatcher),
-      write_in_progress_(false) {}
+    			: ctx_{ctx}
+				, ws_(std::move(socket)
+				, *ctx_), buffer_()
+				, queue_()
+				, dispatcher_(dispatcher)
+				, write_in_progress_(false) {
+  try {
+    ws_.next_layer().handshake(ssl::stream_base::server);
+} catch (std::exception& e) {
+	std::cerr << e.what();
+  }
+}
 
 Client::~Client() {}
 

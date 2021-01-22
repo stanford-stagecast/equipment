@@ -5,6 +5,7 @@
 #define BOOST_NETWORK_ENABLE_HTTPS
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
