@@ -7,6 +7,8 @@
 
 #include <boost/beast.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -15,6 +17,7 @@ namespace beast = boost::beast;
 using namespace boost::beast;
 using namespace boost::beast::websocket;
 using tcp = boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
 namespace pt = boost::property_tree;
 
 using namespace std;
@@ -30,18 +33,19 @@ void validate_arguments(int argc) {
   }
 }
 
-void open_websocket(net::io_context& ioc, stream<tcp::socket>& ws, string server_name, string port) {
+void open_websocket(net::io_context& ioc, stream<ssl::stream<tcp::socket>>& ws, string server_name, string port) {
   cout << "Connecting to server..." << endl;
   tcp::resolver resolver{ioc};
 
   auto const lookup = resolver.resolve(server_name, port);
-  auto endpoint = net::connect(ws.next_layer(), lookup);
+  auto endpoint = net::connect(ws.next_layer().next_layer(), lookup);
 
   string host = server_name;
   host += ":";
   host += endpoint.port();
 
   cout << "Testing connection..." << endl;
+  ws.next_layer().handshake(ssl::stream_base::client);
   ws.handshake(host, "/");
   cout << "Connection Success!" << endl;
 }
@@ -70,7 +74,9 @@ condition_variable ws_signal;
 
 void ws_thread(string server_name, string port) {
   net::io_context ioc;
-  stream<tcp::socket> ws(ioc);
+  ssl::context ctx(ssl::context::tls);
+  ctx.set_verify_mode(ssl::verify_none);
+  stream<ssl::stream<tcp::socket>> ws(ioc, ctx);
   open_websocket(ioc, ws, server_name, port);
 
   // whenever changes are available,
