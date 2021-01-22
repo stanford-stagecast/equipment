@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <vector>
 #include <arpa/inet.h>
-
+#include <netdb.h>
 
 using namespace std;
 
@@ -67,7 +67,14 @@ int main(int argc, char **argv) {
 
     dst.sin_family = AF_INET;
     dst.sin_port = htons(port);
-    inet_aton(addr_s.c_str(), reinterpret_cast<in_addr *>(&dst.sin_addr.s_addr));
+    hostent *host = gethostbyname(addr_s.c_str());
+    cout << "Using ";
+    cout << unsigned(uint8_t(host->h_addr_list[0][0])) << ".";
+    cout << unsigned(uint8_t(host->h_addr_list[0][1])) << ".";
+    cout << unsigned(uint8_t(host->h_addr_list[0][2])) << ".";
+    cout << unsigned(uint8_t(host->h_addr_list[0][3])) << ":";
+    cout << port << endl;
+    dst.sin_addr = *reinterpret_cast<in_addr *>(host->h_addr_list[0]);
     hosts.push_back(dst);
   }
 
