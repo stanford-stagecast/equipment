@@ -30,6 +30,9 @@ add_subdirectory(cli)
 # DMX transmitter
 add_subdirectory(dmx)
 
+# UDP forwarder
+add_subdirectory(forwarder)
+
 # Tests
 add_subdirectory(tests)
 include(tests.cmake)

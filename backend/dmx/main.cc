@@ -25,18 +25,6 @@ void validate_arguments(int argc) {
   }
 }
 
-void read_midi_message(ifstream& midi, uint8_t& status, uint8_t& channel, uint8_t& value) {
-  do {
-    do {
-      midi >> status;
-      // we might get out of sync, so we need to wait for a control byte
-    } while (status < 0x80);
-    midi >> channel;
-    midi >> value;
-    // sometimes a byte will go missing and we'll get out of sync
-  } while (channel >= 0x80 || value >= 0x80);
-}
-
 struct __attribute__ ((packed)) serial_dmx_msg {
   uint8_t start_of_message;
   uint8_t label;
@@ -55,6 +43,8 @@ int open_udp_server(int port) {
   localaddr.sin_family = AF_INET;
   localaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   localaddr.sin_port = htons(port);
+  int one = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
   if (int x = bind(fd, reinterpret_cast<sockaddr *>(&localaddr), sizeof(localaddr)) < 0) {
     return x;
   }
