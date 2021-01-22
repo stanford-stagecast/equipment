@@ -106,9 +106,6 @@ int main(int argc, char **argv) {
     out.data[0] = 0; // start byte
     memcpy(&out.data[1], msg->data, sizeof(msg->data)); // data
     out.end_of_message = 0xe7; // end
-    cout << static_cast<int>(out.data[1]) << " ";
-    cout << static_cast<int>(out.data[2]) << " ";
-    cout << static_cast<int>(out.data[3]) << endl;
 
     dmx.write(reinterpret_cast<char *>(&out), sizeof(out));
     dmx.flush();

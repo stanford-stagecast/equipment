@@ -28,10 +28,10 @@ static const string DELETE_CUE = "delete-cue";
 static const string LIST_CUES = "list-cues";
 static const string SAVE_TO_DISK = "save-to-disk";
 
-Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::string filename)
+Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::string filename, int dmx_port)
     : dispatcher_(dispatcher), ioc_(ioc),
       timer_(ioc_, net::chrono::milliseconds(CYCLE_TIME_MS)),
-      transmitter_(ioc, net::ip::make_address("127.0.0.1"), 0),
+      transmitter_(ioc, net::ip::make_address("127.0.0.1"), dmx_port),
       filename_(filename) {
   tick_time_ = chrono::duration_cast<chrono::milliseconds>(
       chrono::system_clock::now().time_since_epoch());
@@ -114,7 +114,7 @@ void Manager::get_levels(CueList &list_) {
 
   stringstream ss;
   json::write_json(ss, root);
-  transmitter_.update(universe);
+  transmitter_.update(list_.number(), universe);
   dispatcher_->do_update(string_view(ss.str()));
 }
 
@@ -231,6 +231,7 @@ void Manager::rename_list(CueList &list, string &name) {
 
 void Manager::delete_list(CueList &list) {
   lists_.erase(list.number());
+  transmitter_.remove_universe(list.number());
   get_lists();
 }
 

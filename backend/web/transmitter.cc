@@ -5,28 +5,27 @@
 #include <boost/bind.hpp>
 
 #define RETX_TIME_MS 1000
-#define OUTPUT_PORT 0x3334
 
 Transmitter::Transmitter(net::io_context &context, net::ip::address destination,
-                         unsigned universe)
+                         unsigned dmx_port)
     : ioc_(context), destination_(destination), socket_(context),
-      endpoint_(destination, OUTPUT_PORT), universe_(universe) {
+      endpoint_(destination, dmx_port) {
   if (destination.is_v4()) {
-    std::cout << "Sending Universe " << universe << " levels to <"
-              << destination << ">" << std::endl;
+    std::cout << "Sending levels to <"
+              << destination << ":" << dmx_port << ">" << std::endl;
     socket_.open(net::ip::udp::v4());
   } else if (destination.is_v6()) {
-    std::cout << "Sending Universe " << universe << " levels to <"
-              << destination << ">" << std::endl;
+    std::cout << "Sending levels to <"
+              << destination << ":" << dmx_port << ">" << std::endl;
     socket_.open(net::ip::udp::v6());
   } else {
-    std::cerr << "Cannot send Universe " << universe << " levels to <"
-              << destination << ">: invalid IP." << std::endl;
+    std::cerr << "Cannot send levels to <"
+              << destination << ":" << dmx_port << ">: Invalid Address" << std::endl;
   }
 }
 
-void Transmitter::update(const universe_t &universe) {
-  saved_ = universe;
+void Transmitter::update(unsigned id, const universe_t &universe) {
+  saved_[id] = universe;
   transmit();
 }
 
@@ -64,11 +63,21 @@ std::array<uint8_t, sizeof(dmx_msg)> serialize_packet(unsigned universe,
 
 void Transmitter::transmit() {
   ms_since_last_tx_ = 0;
-  auto buffer = net::buffer(serialize_packet(universe_, saved_, seqno_));
+  for (const auto& x : saved_) {
+    transmit_universe(x.first);
+  }
+}
+
+void Transmitter::transmit_universe(unsigned id) {
+  auto buffer = net::buffer(serialize_packet(id, saved_[id], seqno_));
 
   socket_.async_send_to(buffer, endpoint_, boost::bind(&Transmitter::on_send, this, net::placeholders::error, net::placeholders::bytes_transferred));
 
   seqno_++; // increment (and/or overflow)
+}
+
+void Transmitter::remove_universe(unsigned id) {
+  saved_.erase(id);
 }
 
 void Transmitter::fail(boost::system::error_code ec, std::string_view what) {

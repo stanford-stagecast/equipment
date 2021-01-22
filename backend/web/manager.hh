@@ -43,7 +43,7 @@ private:
 
   void save_to_disk();
 public:
-  Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc, std::string filename);
+  Manager(std::shared_ptr<Dispatcher> dispatcher, net::io_context& ioc, std::string filename, int dmx_port);
 
   void begin();
   void on_update(std::string_view update);
