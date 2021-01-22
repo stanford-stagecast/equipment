@@ -73,7 +73,7 @@ void ws_thread(string server_name, string port) {
   stream<tcp::socket> ws(ioc);
   open_websocket(ioc, ws, server_name, port);
 
-  // whenever changes are available, 
+  // whenever changes are available,
   while (true) {
     map<uint8_t, uint8_t> local;
     {
@@ -90,6 +90,7 @@ void ws_thread(string server_name, string port) {
     }
     pt::ptree json;
     json.put("type", "set-levels");
+	json.put("list_id", 0); // This is a hack to work with cue lists. Fix later.
     pt::ptree array;
     for (auto x : local) {
       pt::ptree current;
