@@ -10,6 +10,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -g -pedantic -pedantic-error
 # Packages
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Boost
 set(Boost_USE_STATIC_LIBS OFF)
