@@ -11,6 +11,7 @@ class Dispatcher;
 
 class Client : public std::enable_shared_from_this<Client> {
 private:
+  std::shared_ptr<ssl::context> ctx_;
   websocket::stream<beast::tcp_stream> ws_;
   beast::flat_buffer buffer_;
   std::queue<std::string> queue_;
@@ -26,7 +27,7 @@ private:
   void do_write();
 
 public:
-  Client(tcp::socket &&socket, std::shared_ptr<Dispatcher> dispatcher);
+  Client(std::shared_ptr<ssl::context> ctx, tcp::socket &&socket, std::shared_ptr<Dispatcher> dispatcher);
   ~Client();
 
   void run();

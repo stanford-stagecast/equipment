@@ -12,6 +12,9 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
+  shared_ptr<ssl::context> ctx = make_shared<ssl::context>(ssl::context::tlsv13);
+  ctx->set_verify_mode(ssl::verify_none);
+
   net::io_context ioc;
   net::ip::address address = net::ip::make_address("0.0.0.0");
   tcp::endpoint endpoint(address, 8000);
@@ -22,7 +25,7 @@ int main(int argc, char* argv[]) {
   manager->begin();
 
   // we need a shared_ptr to exist for the listener to work
-  make_shared<Listener>(ioc, endpoint, dispatcher)->run();
+  make_shared<Listener>(ctx, ioc, endpoint, dispatcher)->run();
 
   ioc.run();
 }

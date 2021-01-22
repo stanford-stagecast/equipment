@@ -5,9 +5,9 @@
 #include <iostream>
 #include <sstream>
 
-Client::Client(tcp::socket &&socket,
+Client::Client(std::shared_ptr<ssl::context> ctx, tcp::socket &&socket,
                std::shared_ptr<Dispatcher> dispatcher)
-    : ws_(std::move(socket)), buffer_(), queue_(), dispatcher_(dispatcher),
+    : ctx_{ctx}, ws_(std::move(socket), *ctx_), buffer_(), queue_(), dispatcher_(dispatcher),
       write_in_progress_(false) {}
 
 Client::~Client() {}
