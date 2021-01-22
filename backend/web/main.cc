@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  shared_ptr<ssl::context> ctx = make_shared<ssl::context>(ssl::context::tlsv13);
+  shared_ptr<ssl::context> ctx = make_shared<ssl::context>(ssl::context::tls);
   ctx->set_verify_mode(ssl::verify_none);
 
   net::io_context ioc;
