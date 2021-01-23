@@ -74,7 +74,7 @@ condition_variable ws_signal;
 
 void ws_thread(string server_name, string port) {
   net::io_context ioc;
-  ssl::context ctx(ssl::context::tls);
+  ssl::context ctx(ssl::context::tlsv12);
   ctx.set_verify_mode(ssl::verify_none);
   stream<ssl::stream<tcp::socket>> ws(ioc, ctx);
   open_websocket(ioc, ws, server_name, port);
