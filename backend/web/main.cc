@@ -12,8 +12,11 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  shared_ptr<ssl::context> ctx = make_shared<ssl::context>(ssl::context::tls);
+  shared_ptr<ssl::context> ctx = make_shared<ssl::context>(ssl::context::tlsv12);
   ctx->set_verify_mode(ssl::verify_none);
+  ctx->use_certificate_chain_file("../../web/certificate/server.crt");
+  ctx->use_private_key_file("../../web/certificate/server.key", ssl::context::pem);
+  ctx->use_tmp_dh_file("../../web/certificate/dh1024.pem");
 
   net::io_context ioc;
   net::ip::address address = net::ip::make_address("0.0.0.0");
