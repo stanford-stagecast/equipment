@@ -1,0 +1,58 @@
+.Fader {
+  display: flex;
+  flex-direction: column;
+}
+
+._fader {
+  width: 100px;
+  margin-top: 50px;
+  transform: rotate(270deg);
+  margin-bottom: 50px;
+}
+
+._text {
+  font-size: 24pt;
+  text-align: center;
+}
+
+._manual {
+  color: darkred;
+}
+
+._raised {
+  color: darkblue;
+}
+
+._lowered {
+  color: darkgreen;
+}
+
+._tracked {
+  color: grey;
+}
+
+._blocked {
+  color: black;
+}
+
+._fader_with_detents {
+	position: relative;
+}
+
+._detent {
+	display: inline-block;
+	position: absolute;
+	top: 49%;
+	transform: translate(0, -50%);
+	background-color: grey;
+	width: 10px;
+	height: 2px;
+}
+
+#_left_detent {
+	left: 30%;
+}
+
+#_right_detent {
+	right: 30%;
+}
