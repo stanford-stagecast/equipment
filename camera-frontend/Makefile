@@ -21,6 +21,10 @@ run: setup
 build: setup
 	npm run build
 
+.PHONY: check
+check: setup
+	npm run validate
+
 .PHONY: npm
 npm:
 	@which npm > /dev/null || (echo -e "\nPlease install NPM (https://www.npmjs.com) and try again.\n" && exit 1)

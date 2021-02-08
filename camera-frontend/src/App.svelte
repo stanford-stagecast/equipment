@@ -1,130 +1,77 @@
 <script lang="ts">
-  import ActorTab from './ActorTab.svelte';
-  import type { Actor } from './types';
-  export let actors: Actor = [
-    {
-      name: "Kirk",
-      url: "big-buck-bunny.mp4",
-      outputs: [
-        {
-          name: "Close Up",
-          current: {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          },
-          presets: [
-            {
-              name: "Full",
-              config: {
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-              },
-            },
-            {
-              name: "Small",
-              config: {
-                top: 0,
-                right: 100,
-                bottom: 100,
-                left: 0,
-              },
-            }
-          ],
-        },
-        {
-          name: "Wide",
-          current: {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          },
-          presets: [
-            {
-              name: "Full",
-              config: {
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-              },
-            },
-            {
-              name: "Small",
-              config: {
-                top: 0,
-                right: 100,
-                bottom: 100,
-                left: 0,
-              },
-            }
-          ],
-        },
-      ]
-    }, {
-      name: "Spock",
-      url: "elephants-dream.mp4",
-      outputs: [
-        {
-          name: "Close Up",
-          current: {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          },
-          presets: [],
-        }
-      ]
-    }
-  ];
-  export let current = 0;
+  import { onMount } from 'svelte';
+  import server from './server';
+  /* import server from './fake_server'; */
+  import type { State, View } from './types';
 
-  function selectTab(i: number) {
-    current = i;
+  import ViewControl from './ViewControl.svelte';
+
+  let current: string;
+
+  let state: State = {
+    views: [],
+    inputs: [],
+  };
+
+  let view: View;
+  $: {
+    if (state.views) {
+      state.views.map(x => {
+        if (x.id.toString() === current) {
+          view = x;
+        }
+      });
+    }
   }
+
+  onMount(() => {
+    server.subscribe(msg => {
+      state = msg;
+      if ((current === undefined || current === "") && state.views && state.views !== []) {
+        current = state.views[0].id.toString();
+      }
+    });
+  });
+
+  let active = false;
+  $: {
+    active = state.views !== undefined && state.views.length !== 0;
+  }
+
+  function add_view() {
+    let name = window.prompt("Enter a name for the new view");
+    if (name === undefined) return;
+    server.sendMessage({
+      type: 'add-view',
+      data: {name},
+    });
+  }
+
 </script>
 
 <main>
-  <div id="tab_bar">
-    {#each actors as actor, i}
-      {#if i === current}
-        <button class="tab current" disabled>{actor.name}</button>
+  <div id="view_picker">
+    Currently Editing:
+    <select id="select_view" disabled={!active}
+            bind:value={current}>
+      {#if active}
+        {#each state.views as view}
+          <option value={view.id.toString()}>{view.name}</option>
+        {/each}
       {:else}
-        <button class="tab" on:click={() => selectTab(i)}>{actor.name}</button>
+        <option value="">N/A</option>
       {/if}
-    {/each}
+    </select>
+    <button id="add_view" on:click={add_view}>New View</button>
+    <br/>
+    {#if active}
+      <ViewControl view={view} inputs={state.inputs}
+        sendMessage={server.sendMessage}/>
+    {/if}
   </div>
-  {#each actors as actor, i}
-    <div class="body" class:hidden={i !== current}>
-      <ActorTab actor={actor}/>
-    </div>
-  {/each}
 </main>
 
 <style>
-  .tab {
-    padding: 10px;
-    margin: 5px;
-  }
-
-  .tab.current {
-    color: white;
-    background-color: #5555ff;
-  }
-
-  .body {
-    border: 1px solid black;
-    margin: 10px;
-  }
-
-  .body.hidden {
-    display: none;
-  }
 
   @media (min-width: 640px) {
     main {
