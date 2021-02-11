@@ -33,6 +33,9 @@ add_subdirectory(dmx)
 # UDP forwarder
 add_subdirectory(forwarder)
 
+# Captioner
+add_subdirectory(captions)
+
 # Tests
 add_subdirectory(tests)
 include(tests.cmake)
