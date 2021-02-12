@@ -3,6 +3,10 @@
 using namespace std;
 using high_resolution_clock = std::chrono::high_resolution_clock;
 
+/**
+ * The constructor takes in a stream key string obtained from Youtube
+ * as well as a path to
+ */
 Captioner::Captioner(string stream_key, string caption_path)
  	: target_{ "/closedcaption?cid=" + stream_key + "&seq="} {
 
@@ -12,50 +16,18 @@ Captioner::Captioner(string stream_key, string caption_path)
 		throw runtime_error( "Could not open " + caption_path );
 	}
 
+	// Reads the first line into next_line_
+	read_next_line();
+
+	// Resolves the hostname and connects
 	auto const results = resolver_.resolve(host_, "http");
 	stream_.connect(results);
-	read_next_line();
 }
 
-void Captioner::read_next_line() {
-	string line;
-	if (!captions_) {
-		cerr << "End of captions reached";
-	}
-	getline(captions_, line);
-	next_line_ = line;
-}
-
-void Captioner::send_next_caption() {
-	string line = next_line_;
-	string time = utc_time();
-	string payload = time + '\n' + line + '\n';
-
-	read_next_line();
-
-	cerr << payload;
-
-	http::request<http::string_body> req{http::verb::post, target_ + to_string(seqno_), 11};
-	seqno_++;
-    req.set(http::field::host, host_);
-
-	req.body() = payload;
-	req.prepare_payload();
-
-	// req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-	http::write(stream_, req);
-
-	http::response<http::dynamic_body> res;
-
-	beast::flat_buffer buffer;
-	// Receive the HTTP response
-	http::read(stream_, buffer, res);
-
-	if (res.result_int() != 200) {
-		cerr << "Request returned code " << res.result_int() << endl;
-	}
-}
-
+/**
+ * This method finds the current time and returns it in a string
+ * formatted in a way the YouTube expects
+ */
 string Captioner::utc_time() {
 	high_resolution_clock::time_point now = high_resolution_clock::now();
 
@@ -70,5 +42,53 @@ string Captioner::utc_time() {
 	}
 
 	string time(c_time, c_time + len);
+
+	// Ideally this would have the time in milliseconds and not just add 000
+	// But I couldn't figure out how to do that.
 	return time + "000";
+}
+
+/**
+ * This method reads the next line from captions_ into next_line_
+ */
+void Captioner::read_next_line() {
+	string line;
+	if (!captions_) {
+		cerr << "End of captions reached";
+	}
+	getline(captions_, line);
+	next_line_ = line;
+}
+
+/**
+ * This method sends the caption in next_line_ to YouTube
+ */
+void Captioner::send_next_caption() {
+	// Constructs the payload
+	string line = next_line_;
+	string time = utc_time();
+	string payload = time + '\n' + line + "<br>\n";
+
+	// Reads the next line into next_line_
+	read_next_line();
+
+	// Constructs and sends HTTP request
+	http::request<http::string_body> req{http::verb::post, target_ + to_string(seqno_), 11};
+    req.set(http::field::host, host_);
+	req.body() = payload;
+	req.prepare_payload();
+	http::write(stream_, req);
+
+	// Increments seqno
+	seqno_++;
+
+	// Receives HTTP response
+	http::response<http::dynamic_body> res;
+	beast::flat_buffer buffer;
+	http::read(stream_, buffer, res);
+
+	// Reports errors
+	if (res.result_int() != 200) {
+		cerr << "Request returned code " << res.result_int() << endl;
+	}
 }
