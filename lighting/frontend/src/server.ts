@@ -3,13 +3,17 @@ import type { Message } from './message';
 
 const wsStore = writable({});
 
-const socket = new WebSocket(`wss://${window.location.hostname}:5000`);
+const socket = new WebSocket(`ws://${window.location.hostname}:8000/socket`);
+
+socket.addEventListener('open', () => {
+  socket.send(JSON.stringify({'type': 'sync'}));
+});
 
 socket.addEventListener('message', (event) => {
   let json = JSON.parse(event.data);
   let type = json.type;
   let data = json.data;
-  if (type === 'sync-state') {
+  if (type === 'sync') {
     wsStore.set(data);
   } else {
     console.error("Unknown message:", event.data);

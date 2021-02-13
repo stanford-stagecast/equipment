@@ -1,0 +1,9 @@
+[Unit]
+Description=Stagecast Lighting interface
+
+[Service]
+Type=simple
+WorkingDirectory={{PATH}}
+ExecStart={{PATH}}/run.sh
+Restart=always
+RestartSec=30
