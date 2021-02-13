@@ -29,7 +29,7 @@ def make_app(static_path: str) -> tornado.web.Application:
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python main.py <port> <static file path>")
+        print("Usage: python3 main.py <port> <static file path>")
         exit(1)
 
     try:
