@@ -26,6 +26,7 @@ private:
   std::string filename_;
 
   void set_levels(CueList& list, boost::property_tree::ptree values);
+  void set_mutes(CueList& list, boost::property_tree::ptree values);
   void save_cue(CueList& list, unsigned q, float time);
   void restore_cue(CueList& list, unsigned q);
   void delete_cue(CueList& list, unsigned q);

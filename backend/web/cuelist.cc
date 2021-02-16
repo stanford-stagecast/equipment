@@ -15,9 +15,10 @@ vector<CueList::level_info_t> CueList::current_levels() {
     for (unsigned i = 0; i < MAX_CHANNELS; i++) {
       if (i >= visibility_.size() || !visibility_[i]) continue;
       level_info_t info;
-      info.level = 0;
+      info.level = 0.5;
       info.status = MANUAL;
       info.channel = i;
+	  info.mute = true;
       if (level_overrides_.count(i)) {
         info.level = level_overrides_[i];
       }
@@ -69,6 +70,15 @@ void CueList::set_level(Cue::channel_t channel, boost::optional<Cue::level_t> le
   if (channel >= MAX_CHANNELS) return;
   if (level.has_value()) {
     level_overrides_[channel] = *level;
+  } else if (level_overrides_.count(channel)) {
+    level_overrides_.erase(channel);
+  }
+}
+
+void CueList::set_mute(Cue::channel_t channel, boost::optional<bool> mute) {
+  if (channel >= MAX_CHANNELS) return;
+  if (mute.has_value()) {
+    level_overrides_[channel] = *mute;
   } else if (level_overrides_.count(channel)) {
     level_overrides_.erase(channel);
   }

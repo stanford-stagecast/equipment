@@ -8,7 +8,7 @@
 class Cue {
 public:
   typedef unsigned channel_t;
-  typedef int level_t;
+  typedef float level_t;
   typedef std::vector<boost::optional<level_t>> levels_t;
 
 private:

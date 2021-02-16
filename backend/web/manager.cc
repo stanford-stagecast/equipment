@@ -21,6 +21,7 @@ static const string DELETE_LIST = "delete-list";
 static const string LIST_CUES = "list-cues";
 static const string GET_LEVELS = "get-levels";
 static const string SET_LEVELS = "set-levels";
+static const string SET_MUTE = "set-mute";
 static const string SAVE_CUE = "save-cue";
 static const string RESTORE_CUE = "restore-cue";
 
@@ -101,9 +102,9 @@ void Manager::get_levels(CueList &list_) {
     current.put("value", info.level);
     current.put("status", status_message(info.status));
     current.put("visible", info.visible);
-    if (info.channel < 512) {
-      universe[info.channel] = clamp(info.level, 0, 255);
-    }
+    // if (info.channel < 512) {
+    //   universe[info.channel] = clamp(info.level, 0, 1);
+    // }
     values.push_back(make_pair("", current));
   }
 
@@ -132,10 +133,20 @@ void Manager::set_levels(CueList &list_, boost::property_tree::ptree values) {
   for (auto &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
-    int value = node.get<int>("value");
+    int value = node.get<float>("value");
     list_.set_level(channel, value);
   }
   get_levels(list_);
+}
+
+void Manager::set_mutes(CueList &list_, boost::property_tree::ptree values) {
+	for (auto &x : values) {
+	  json::ptree node = x.second;
+	  int channel = node.get<int>("channel");
+	  int value = node.get<bool>("value");
+	  list_.set_mute(channel, value);
+	}
+	get_levels(list_);
 }
 
 void Manager::save_cue(CueList &list_, unsigned q, float time) {
@@ -293,6 +304,8 @@ void Manager::on_update(string_view update) {
       get_levels(list);
     } else if (type == SET_LEVELS) {
       set_levels(list, pt.get_child("values"));
+  	} else if (type == SET_MUTE) {
+	  set_mutes(list, pt.get_child("values"));
     } else if (type == RESET_CHANNEL) {
       reset_channel(list, pt.get<unsigned>("channel"));
     } else if (type == TRACK_CHANNEL) {
