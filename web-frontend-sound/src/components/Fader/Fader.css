@@ -3,18 +3,6 @@
   flex-direction: column;
 }
 
-._fader {
-  width: 100px;
-  margin-top: 50px;
-  transform: rotate(270deg);
-  margin-bottom: 50px;
-}
-
-._text {
-  font-size: 24pt;
-  text-align: center;
-}
-
 ._manual {
   color: darkred;
 }
@@ -35,24 +23,53 @@
   color: black;
 }
 
-._fader_with_detents {
-	position: relative;
+#_detent {
+	display: block;
+	margin-left: 50%;
 }
 
-._detent {
-	display: inline-block;
+#_pan_detent {
 	position: absolute;
-	top: 49%;
-	transform: translate(0, -50%);
+	width: 2px;
+	height: 10px;
 	background-color: grey;
-	width: 10px;
-	height: 2px;
 }
 
-#_left_detent {
-	left: 30%;
+._mute {
+	display: block;
+	position: relative;
+	margin-bottom: 30px;
+	margin-top: 10px;
+	cursor: pointer;
+	user-select: none;
 }
 
-#_right_detent {
-	right: 30%;
+._mute input {
+  position: auto;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+._mute_box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 50px;
+  width: 100%;
+  background-color: #EAEAEA;
+}
+
+._mute:hover input ~ ._mute_box {
+  background-color: #D5D5D4;
+}
+
+._mute input:checked ~ ._mute_box {
+  background-color: #B1040E;
+}
+
+._mute_box p {
+	color: #2E2D29;
+    text-align: center;
 }

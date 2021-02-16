@@ -249,11 +249,10 @@ export default class Server {
     this.socket.send(JSON.stringify(data));
   }
 
-  set_level(channel: number, value: number) {
+  toggle_mute(channel: number, value: boolean) {
     channel = Math.floor(channel);
-    value = Math.floor(value);
     let data = {
-      type: 'set-levels',
+      type: 'set-mute',
       list_id: this.list_id,
       values: [
         {
@@ -263,6 +262,22 @@ export default class Server {
       ]
     };
     this.socket.send(JSON.stringify(data));
+  }
+
+  set_pan(channel: number, value: number) {
+	channel = Math.floor(channel);
+	value = value / 255;
+	let data = {
+	  type: 'set-levels',
+	  list_id: this.list_id,
+	  values: [
+		{
+		  channel,
+		  value,
+		}
+	  ]
+	};
+	this.socket.send(JSON.stringify(data));
   }
 
   save_cue(cue: number, time: number) {

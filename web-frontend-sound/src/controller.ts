@@ -50,9 +50,9 @@ export default class Controller {
 
   private onmessage(message: WebMidi.MIDIMessageEvent) {
     let channel = message.data[1];
-    let value = message.data[2]*2;
+    let value = (message.data[2] > 63);
     if (channel > 8) {
-      if (value === 0) {
+      if (message.data[2] === 0) {
         return;
       }
       if (this.pending_recording) {
@@ -96,8 +96,8 @@ export default class Controller {
     );
   }
 
-  private ontimeout(channel: number, value: number) {
-    this.server.set_level(channel, value);
+  private ontimeout(channel: number, value: boolean) {
+    this.server.toggle_mute(channel, value);
     this.timeouts.delete(channel);
   }
 
