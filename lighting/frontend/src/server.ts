@@ -12,11 +12,24 @@ socket.addEventListener('open', () => {
 socket.addEventListener('message', (event) => {
   let json = JSON.parse(event.data);
   let type = json.type;
-  let data = json.data;
-  if (type === 'sync') {
-    wsStore.set(data);
-  } else {
-    console.error("Unknown message:", event.data);
+  switch (type) {
+    case 'sync': {
+      let data = json.data;
+      wsStore.set(data);
+      break;
+    }
+    case 'success': {
+      window.alert(json.description);
+      break;
+    }
+    case 'error': {
+      window.alert(json.description);
+      break;
+    }
+    default: {
+      console.error("Unknown message:", event.data);
+      break;
+    }
   }
 });
 

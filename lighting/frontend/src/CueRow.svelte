@@ -89,10 +89,10 @@
 
 <style>
   td {
-    border: 1px solid grey;
-    border-collapse: collapse;
     text-align: center;
     vertical-align: middle;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
   }
 
   input#name {

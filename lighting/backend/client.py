@@ -4,6 +4,7 @@ from cue_list import CueList
 from serializer import serialize, deserialize
 from state import State
 
+
 class ClientHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True
@@ -16,9 +17,9 @@ class ClientHandler(tornado.websocket.WebSocketHandler):
             data = json.loads(message)
         except json.JSONDecodeError:
             return self.respond_with_error("invalid JSON")
-        if 'type' not in data:
+        if "type" not in data:
             return self.respond_with_error("no message type")
-        tp = data['type']
+        tp = data["type"]
         if tp == "sync":
             return self.sync()
         elif tp == "update":
@@ -29,12 +30,12 @@ class ClientHandler(tornado.websocket.WebSocketHandler):
 
     def sync(self):
         cues = State.get()
-        self.send({'type': 'sync', 'data': serialize(cues)})
+        self.send({"type": "sync", "data": serialize(cues)})
 
     def update(self, data: dict):
-        if 'data' not in data:
+        if "data" not in data:
             return self.respond_with_error("no data")
-        new = deserialize(data['data'])
+        new = deserialize(data["data"])
         if new is None:
             return self.respond_with_error("invalid data")
         State.set(new)
@@ -45,13 +46,14 @@ class ClientHandler(tornado.websocket.WebSocketHandler):
         filename = "lights.json"
         data = serialize(cues)
         data = json.dumps(data)
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             f.write(data)
+            self.send({"type": "success", "description": "Saved!"})
+            return
+        self.respond_with_error("error saving")
 
     def send(self, data: dict):
-        self.write_message(
-            json.dumps(data)
-        )
+        self.write_message(json.dumps(data))
 
     def respond_with_error(self, msg: str):
         self.send({"type": "error", "description": msg})
