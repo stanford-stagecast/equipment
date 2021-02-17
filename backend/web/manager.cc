@@ -67,7 +67,7 @@ void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 void Manager::save_to_disk() {
   std::ofstream ofs(filename_);
   {
-    boost::archive::xml_oarchive archive(ofs);
+    boost::archive::text_oarchive archive(ofs);
     archive << BOOST_SERIALIZATION_NVP(lists_);
   }
 }
@@ -116,12 +116,13 @@ void Manager::get_levels(CueList &list_) {
     cue_info.put("last", list_.last_cue());
     cue_info.put("next", list_.next_cue());
     cue_info.put("previous", list_.previous_cue());
+	cue_info.put_child("values", values);
   }
 
   root.put("list", list_.number());
   root.put("type", GET_LEVELS);
   root.put_child("cue", cue_info);
-  root.put_child("values", values);
+
 
   stringstream ss;
   json::write_json(ss, root);
