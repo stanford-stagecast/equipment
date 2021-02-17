@@ -14,14 +14,14 @@ type GetLevels = {
     'last': string,
     'next': string,
     'previous': string,
+	values: [
+	  {
+		'channel': string,
+		'value': string,
+		status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
+	  }
+	]
   },
-  values: [
-    {
-      'channel': string,
-      'value': string,
-      status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
-    }
-  ]
 };
 
 type GetLists = {
@@ -130,8 +130,9 @@ export default class Server {
   }
 
   private get_levels(msg: GetLevels) {
+	console.log(msg);
     if (parseInt(msg.list) !== this.list_id) return;
-    let values = msg.values || [];
+    let values = msg.cue.values || [];
     this.dispatch({
       type: 'update_channels',
       values: values.map((x) => {
