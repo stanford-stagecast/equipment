@@ -3,7 +3,7 @@ from cue_list import CueList
 cues = CueList()
 
 
-class State():
+class State:
     @staticmethod
     def get() -> CueList:
         return cues
@@ -12,4 +12,3 @@ class State():
     def set(data: CueList):
         global cues
         cues = data
-

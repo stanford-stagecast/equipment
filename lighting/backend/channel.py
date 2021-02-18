@@ -1,18 +1,17 @@
 from typing import List
 
 
-class Channel():
+class Channel:
     @staticmethod
-    def get_defaults() -> List['Channel']:
+    def get_defaults() -> List["Channel"]:
         names = ["Aiyana", "Audrey", "JJ", "Justine", "Sam"]
         channels = [
-                ["Left", "Right"],
-                ["BGLeft", "BGRight"],
+            ["Left", "Right"],
+            ["BGLeft", "BGRight"],
         ]
         return [
-                Channel(i + 1, f'{names[(i % 10)//2]}-{channels[i // 10][i % 2]}')
-                for i
-                in range(0, 20)
+            Channel(i + 1, f"{names[(i % 10)//2]}-{channels[i // 10][i % 2]}")
+            for i in range(0, 20)
         ]
 
     def __init__(self, number: int, name: str):

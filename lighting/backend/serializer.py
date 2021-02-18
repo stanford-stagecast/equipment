@@ -25,8 +25,11 @@ def serialize(cues: CueList) -> dict:
                 "number": cue.number,
                 "name": cue.name,
                 "deltas": [
-                    {"channel": delta.channel.number, "intensity":
-                        delta.intensity, "hue": delta.hue}
+                    {
+                        "channel": delta.channel.number,
+                        "intensity": delta.intensity,
+                        "hue": delta.hue,
+                    }
                     for delta in cue.deltas
                 ],
             }
@@ -64,8 +67,6 @@ def deserialize(data: dict) -> Optional[CueList]:
             chan = channels.get(channel)
             if chan is None:
                 return None
-            deltas += [
-                Delta(chan, intensity, hue)
-            ]
+            deltas += [Delta(chan, intensity, hue)]
         lst.cues += [Cue(number, name, time, deltas)]
     return lst
