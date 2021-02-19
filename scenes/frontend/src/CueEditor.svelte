@@ -16,6 +16,8 @@
   };
   let lights: number;
   let sound: number;
+  let lights_after: number;
+  let sound_after: number;
 
   let current_change = 0;
   $: {
@@ -33,12 +35,16 @@
     };
     lights = 0;
     sound = 0;
+    lights_after = 0;
+    sound_after = 0;
 
     let current = 0;
     while (current < state.cues.length && state.cues[current].number <= cue.number) {
       if (state.cues[current].number === cue.number) {
         visible = new Set([...visible_after]);
         playing = new Set([...playing_after]);
+        lights = lights_after;
+        sound = sound_after;
       }
       for (let change of state.cues[current].changes) {
         if (change.type === "media") {
@@ -52,9 +58,9 @@
           }
         } else if (change.type === "linked") {
           if (change.cue_type === "light") {
-            lights = change.cue_number;
+            lights_after = change.cue_number;
           } else if (change.cue_type === "sound") {
-            sound = change.cue_number;
+            sound_after = change.cue_number;
           }
         } else if (change.type === "camera") {
           if (change.action.type === "add") {

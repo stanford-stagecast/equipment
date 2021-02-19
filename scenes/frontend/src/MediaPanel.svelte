@@ -1,27 +1,34 @@
 <script lang="ts">
-  import type { State } from './types';
-import MediaViewer from './MediaViewer.svelte';
-
+  import type { State, Camera } from './types';
+  import MediaEditor from './MediaEditor.svelte';
   export let state: State;
+  export let sync: Function;
 
   let active = false;
-  $: active = state.media !== undefined;
+  $: active = state.media && state.media.length > 0;
+
+  function new_media() {
+    let media_id = state.media.reduce((p, m) => m.id > p ? m.id : p, 0) + 1;
+    state.media.push({
+      name: "",
+      file: "",
+      id: media_id,
+      type: "image",
+    });
+    state.media = state.media;
+  }
 
 </script>
 
 <main>
   <h1>Media</h1>
   {#if active}
-    <ul>
-      {#each state.media as media}
-        <MediaViewer media={media}/>
-      {/each}
-    </ul>
+    {#each state.media as media (media.id)}
+      <MediaEditor bind:state={state} media={media} sync={sync}/>
+    {/each}
   {/if}
+  <button on:click={new_media}>Add Media</button>
 </main>
 
 <style>
-  main {
-    margin: 10px;
-  }
 </style>

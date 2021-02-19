@@ -44,7 +44,7 @@
     <CuePanel sync={sync} bind:state={state}/>
   </div>
   <div id="media" class="panel">
-    <MediaPanel bind:state={state}/>
+    <MediaPanel sync={sync} bind:state={state}/>
   </div>
   <div id="cameras" class="panel">
     <CameraPanel sync={sync} bind:state={state}/>

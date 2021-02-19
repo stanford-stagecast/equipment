@@ -15,19 +15,19 @@ let initial_state: State = {
   ],
   media: [
     {
-      name: "stanford.png",
+      name: "Stanford",
       id: 0,
       file: "stanford.png",
       type: "image",
     },
     {
-      name: "hamilton.mp4",
+      name: "Transition",
       id: 1,
-      file: "hamilton.mp4",
+      file: "transition.mp4",
       type: "video",
     },
     {
-      name: "doorbell.wav",
+      name: "Doorbell",
       id: 2,
       file: "doorbell.wav",
       type: "audio",
