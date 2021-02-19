@@ -138,7 +138,7 @@
         };
       });
     let stack = [...cameras, ...media].sort((a, b) => {
-      return b.z - a.z;
+      return a.z - b.z;
     });
     return stack;
   }
@@ -177,13 +177,13 @@
     </div>
     <div id="stack">
       <h3>Output Order</h3>
-      [Top]<br/>
+      [Front]<br/>
       <ol>
       {#each get_stack(visible_after, playing_after) as item}
-        <li>{item.type}: {item.name}</li>
+        <li>{item.type}: {item.name} ({item.z})</li>
       {/each}
       </ol>
-      [Bottom]<br/>
+      [Back]<br/>
     </div>
   </div>
 </main>

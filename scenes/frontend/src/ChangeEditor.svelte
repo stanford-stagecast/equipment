@@ -69,9 +69,22 @@
     }
   }
 
+  function update_not_null() {
+    if (change?.action?.config?.view) {
+      change.action.config.view.x = change.action.config.view.x || 0.0;
+      change.action.config.view.y = change.action.config.view.y || 0.0;
+      change.action.config.view.zoom = change.action.config.view.zoom || 1.0;
+      change.action.config.view.z = change.action.config.view.z || 0;
+    }
+    if (change?.action?.config?.playback) {
+      change.action.config.playback.volume = change.action.config.playback.volume || 0.0;
+    }
+  }
+
   function update() {
     update_action();
     update_number();
+    update_not_null();
     sync();
   }
 
@@ -155,7 +168,7 @@
           <input type="number" bind:value={change.action.config.view.y} on:change={update}/><br/>
           Zoom (1.0=100%):<br/>
           <input type="number" step="0.01" bind:value={change.action.config.view.zoom} on:change={update}/><br/>
-          Z (0=bottom):<br/>
+          Z (0=front, higher=further back):<br/>
           <input type="number" bind:value={change.action.config.view.z} on:change={update}/><br/>
         </div>
       {/if}
