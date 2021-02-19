@@ -143,6 +143,22 @@
     return stack;
   }
 
+  function add_action() {
+    let new_change: LinkedCueChange = {
+      type: "linked",
+      cue_type: "light",
+      cue_number: 0,
+    }
+    cue.changes.push(new_change);
+    cue.changes = cue.changes;
+    sync();
+  }
+
+  function remove_action(action) {
+    cue.changes = cue.changes.filter(x => x !== action);
+    sync();
+  }
+
 </script>
 
 <main>
@@ -153,7 +169,7 @@
   <strong>Lights:</strong> {lights / 100}<br/>
   <strong>Sound:</strong> {sound / 100}<br/>
   <div class="row">
-    <form id="change">
+    <div id="change">
       <h3>Actions in this Cue</h3>
       {#each cue.changes as change, i}
         {#if change.type == "media"}
@@ -170,10 +186,15 @@
           <label for={i.toString()}>{get_linked_name(change)}</label><br/>
         {/if}
       {/each}
-    </form>
+      <br/>
+      <button on:click={add_action}>Add Action</button>
+    </div>
     <div id="action">
-      <ChangeEditor bind:state={state} bind:change={cue.changes[current_change]} sync={sync}
-                    visible={visible} playing={playing}/>
+      {#if cue.changes[current_change]}
+        <ChangeEditor bind:state={state} bind:change={cue.changes[current_change]} sync={sync}
+                      visible={visible} playing={playing}
+                      remove_change={remove_action}/>
+      {/if}
     </div>
     <div id="stack">
       <h3>Output Order</h3>
@@ -193,7 +214,7 @@
     display: inline-block;
   }
 
-  form {
+  #change {
     width: 100%;
     border: 1px solid black;
     padding: 10px;

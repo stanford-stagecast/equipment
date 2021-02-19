@@ -5,6 +5,7 @@
   export let sync: Function;
   export let visible: Set<number>;
   export let playing: Set<number>;
+  export let remove_change: Function;
 
   let cue_number = undefined;
   $: {
@@ -27,8 +28,11 @@
       change.cue_number = change.cue_number || 0;
       change.cue_type = change.cue_type || "light";
       change.action = undefined;
+      change.time = undefined;
       return;
     }
+
+    change.time = change.time || 0.0;
 
     if (change.action === undefined) {
       change.action = {
@@ -102,6 +106,12 @@
 
   function needs_playback(change) {
     return change.type === "media" && media_type(change.media_id) !== "image";
+  }
+
+  function delete_change() {
+    let yes = window.confirm("Are you sure you want to delete this action?");
+    if (yes !== true) return;
+    remove_change(change);
   }
 </script>
 
@@ -191,6 +201,7 @@
       {/if}
     {/if}
   {/if}
+  <button on:click={delete_change}>Delete</button>
 </main>
 
 <style>
