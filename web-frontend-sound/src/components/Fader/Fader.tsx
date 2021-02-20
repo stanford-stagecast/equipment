@@ -26,7 +26,7 @@ type FaderProps = {
  * single dimmer's intensity).
  */
 export default function Fader({state_modified, data, dispatch, server}: FaderProps) {
-  return (
+  let block = (
     <div className="Fader">
         <button
           onClick={() => hide_channel(data.channel, server)}>
@@ -35,8 +35,10 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
 		<label
 		className="_mute">
 		<input
+          id={"mute"+data.channel.toString()}
 		  type="checkbox"
-		  onChange={(event) => server.toggle_mute(data.channel, event.target.checked)}/>
+		  onChange={(event) => mute_toggled(event.target, data, server)}
+          />
 		  <span className="_mute_box"><p>Mute</p></span>
 		</label>
 	  <div>
@@ -68,6 +70,8 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
       </button>
     </div>
   );
+  // block.getElementById("mute"+data.channel.toString()).checked = data.mute;
+  return block;
 }
 
 /**
@@ -82,6 +86,11 @@ function pan_changed(target: HTMLInputElement, data: FaderData, server: Server, 
       value: parseInt(target.value),
     }
   });
+}
+
+function mute_toggled(target: HTMLInputElement, data: FaderData, server: Server) {
+    server.toggle_mute(data.channel, target.checked)
+    // target.checked = data.mute;
 }
 
 function hide_channel(channel: number, server: Server) {

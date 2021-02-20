@@ -18,6 +18,7 @@ type GetLevels = {
 	  {
 		'channel': string,
 		'value': string,
+        'mute': boolean,
 		status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
 	  }
 	]
@@ -139,6 +140,7 @@ export default class Server {
         return {
           channel: parseInt(x.channel),
           value: parseInt(x.value),
+          mute: x.mute,
           status: x.status,
         }
       }),
@@ -250,7 +252,7 @@ export default class Server {
     this.socket.send(JSON.stringify(data));
   }
 
-  toggle_mute(channel: number, value: boolean) {
+  toggle_mute(channel: number, mute: boolean) {
     channel = Math.floor(channel);
     let data = {
       type: 'set-mute',
@@ -258,7 +260,7 @@ export default class Server {
       values: [
         {
           channel,
-          value,
+          mute,
         }
       ]
     };
@@ -267,7 +269,6 @@ export default class Server {
 
   set_pan(channel: number, value: number) {
 	channel = Math.floor(channel);
-	value = value / 255;
 	let data = {
 	  type: 'set-levels',
 	  list_id: this.list_id,
