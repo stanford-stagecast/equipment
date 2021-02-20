@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { State, Cue, CameraChange, MediaChange, LinkedCueChange } from './types';
   import ChangeEditor from './ChangeEditor.svelte';
+  import OutputPreview from './OutputPreview.svelte';
 
   export let state: State;
   export let cue: Cue;
@@ -169,11 +170,16 @@
 
 <main>
   <h2>Cue #{cue.number/100}<br/></h2>
-  Name: <input type="text" bind:value={cue.name} on:change={sync}/><br/>
-  <strong>Live Cameras:</strong> {get_camera_names(visible) || "N/A"}<br/>
-  <strong>Live Media:</strong> {get_media_names(playing) || "N/A"}<br/>
-  <strong>Lights:</strong> {lights / 100}<br/>
-  <strong>Sound:</strong> {sound / 100}<br/>
+  <div class="row">
+    <div>
+      Name: <input type="text" bind:value={cue.name} on:change={sync}/><br/>
+      <strong>Live Cameras:</strong> {get_camera_names(visible) || "N/A"}<br/>
+      <strong>Live Media:</strong> {get_media_names(playing) || "N/A"}<br/>
+      <strong>Lights:</strong> {lights / 100}<br/>
+      <strong>Sound:</strong> {sound / 100}<br/>
+    </div>
+    <OutputPreview cue={cue} state={state} current={current_change}/>
+  </div>
   <div class="row">
     <div id="change">
       <h3>Actions in this Cue</h3>

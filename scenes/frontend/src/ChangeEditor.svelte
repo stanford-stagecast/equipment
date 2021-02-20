@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { State, Cue, Change } from './types.ts';
+  import type { State, Change } from './types';
+  import { WIDTH, HEIGHT } from './types';
   export let state: State;
   export let change: Change;
   export let sync: Function;
@@ -44,9 +45,10 @@
     } else {
       let blank_view = {
         zoom: 1.0,
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
+        top: 0.0,
+        left: 0.0,
+        right: WIDTH,
+        bottom: HEIGHT,
       };
       let view = Object.assign(blank_view, change.action.config?.view);
       let blank_playback = {
@@ -172,12 +174,14 @@
     {#if needs_config(change)}
       {#if needs_view(change)}
         <div id="view_config">
-          X (0=left, 1=right):<br/>
-          <input type="number" bind:value={change.action.config.view.x} on:change={update}/><br/>
-          Y (0=top, 1=bottom):<br/>
-          <input type="number" bind:value={change.action.config.view.y} on:change={update}/><br/>
-          Zoom (1.0=100%):<br/>
-          <input type="number" step="0.01" bind:value={change.action.config.view.zoom} on:change={update}/><br/>
+          Top:<br/>
+          <input type="range" min="0" max={HEIGHT} bind:value={change.action.config.view.top} on:change={update}/><br/>
+          Right:<br/>
+          <input type="range" min="0" max={WIDTH} bind:value={change.action.config.view.right} on:change={update}/><br/>
+          Bottom:<br/>
+          <input type="range" min="0" max={HEIGHT} bind:value={change.action.config.view.bottom} on:change={update}/><br/>
+          Left:<br/>
+          <input type="range" min="0" max={WIDTH} bind:value={change.action.config.view.left} on:change={update}/><br/>
           Z (0=front, higher=further back):<br/>
           <input type="number" bind:value={change.action.config.view.z} on:change={update}/><br/>
         </div>

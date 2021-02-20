@@ -1,3 +1,6 @@
+export const WIDTH = 1280;
+export const HEIGHT = 720;
+
 export type State = {
   cameras: Camera[],
   media: Media[],
@@ -73,7 +76,7 @@ export type RemoveCameraAction = {
 }
 
 export type MediaConfig = {
-  view: ViewConfig,
+  view: ViewConfig, // ignore for audio
   playback: PlaybackConfig,
 }
 
@@ -82,10 +85,11 @@ export type CameraConfig = {
 }
 
 export type ViewConfig = {
-  zoom: number, // 1 = 100%, 2 = 200%, 0.5 = 50%, etc.
-  x: number, // x coordinate of the left side of the media: 0 = left, 1 = right
-  y: number, // y coordinate of the right side of the media: 0 = top, 1 = bottom
-  z: number, // z index of this media, higher = in front (ignore for audio)
+  top: number, // y coordinate of the top of the media in the output
+  right: number, // x coordinate of the right of the media in the output
+  bottom: number, // y coordinate of the bottom of the media in the output
+  left: number, // x coordinate of the left of the media in the output
+  z: number, // z index of this media, higher = in front
 }
 
 export type PlaybackConfig = {

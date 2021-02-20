@@ -46,9 +46,10 @@ let initial_state: State = {
             type: "add",
             config: {
               view: {
-                x: 0.0,
-                y: 0.0,
-                zoom: 1.0,
+                top: 0.0,
+                right: 0.0,
+                bottom: 720.0,
+                left: 1280.0,
                 z: 1.0,
               },
               playback: {
@@ -67,9 +68,10 @@ let initial_state: State = {
             type: "add",
             config: {
               view: {
-                x: 0.0,
-                y: 0.0,
-                zoom: 1.0,
+                top: 0.0,
+                right: 0.0,
+                bottom: 720.0,
+                left: 1280.0,
                 z: 0.0,
               }
             }
@@ -102,9 +104,10 @@ let initial_state: State = {
             type: "add",
             config: {
               view: {
-                x: 0.0,
-                y: 0.0,
-                zoom: 1.0,
+                top: 0.0,
+                right: 0.0,
+                bottom: 720.0,
+                left: 640.0,
                 z: 1.0,
               },
               playback: {
