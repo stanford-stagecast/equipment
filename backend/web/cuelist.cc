@@ -15,10 +15,10 @@ vector<CueList::level_info_t> CueList::current_levels() {
     for (unsigned i = 0; i < MAX_CHANNELS; i++) {
       if (i >= visibility_.size() || !visibility_[i]) continue;
       level_info_t info;
-      info.level = 0.5;
+      info.level.pan = Cue::DEFAULT_LEVEL.pan;
       info.status = MANUAL;
       info.channel = i;
-	  info.mute = true;
+	  info.level.mute = Cue::DEFAULT_LEVEL.mute;
       if (level_overrides_.count(i)) {
         info.level = level_overrides_[i];
       }
@@ -37,22 +37,22 @@ vector<CueList::level_info_t> CueList::current_levels() {
     Cue::level_t level = next;
     boost::optional<float> fade = fade_progress();
     if (fade) {
-      Cue::level_t old_level = 0;
+      Cue::level_t old_level = Cue::DEFAULT_LEVEL;
       if (i < fade_source_.size()) {
-        old_level = fade_source_[i].value_or(0);
+        old_level = fade_source_[i].value_or(Cue::DEFAULT_LEVEL);
       }
-      level = (*fade) * next + (1 - (*fade)) * old_level;
+      level.pan = (*fade) * next.pan + (1 - (*fade)) * old_level.pan;
     }
 
     info.level = level;
 
     if (!cues_[q]->get_level(i)) {
       info.status = TRACKED;
-    } else if (level == previous) {
+  } else if ((level.pan == previous.pan) && (level.mute == previous.mute)) {
       info.status = BLOCKED;
-    } else if (level > previous) {
+  } else if (level.pan > previous.pan) {
       info.status = RAISED;
-    } else if (level < previous) {
+  } else if (level.pan < previous.pan) {
       info.status = LOWERED;
     }
 
@@ -75,14 +75,14 @@ void CueList::set_level(Cue::channel_t channel, boost::optional<Cue::level_t> le
   }
 }
 
-void CueList::set_mute(Cue::channel_t channel, boost::optional<bool> mute) {
-  if (channel >= MAX_CHANNELS) return;
-  if (mute.has_value()) {
-    level_overrides_[channel] = *mute;
-  } else if (level_overrides_.count(channel)) {
-    level_overrides_.erase(channel);
-  }
-}
+// void CueList::set_mute(Cue::channel_t channel, boost::optional<bool> mute) {
+//   if (channel >= MAX_CHANNELS) return;
+//   if (mute.has_value()) {
+//     level_overrides_[channel] = *mute;
+//   } else if (level_overrides_.count(channel)) {
+//     level_overrides_.erase(channel);
+//   }
+// }
 
 void CueList::track(Cue::channel_t channel) {
   if (current_cue_number_ >= cues_.size())
@@ -160,8 +160,9 @@ void CueList::record_cue(unsigned q, float time) {
   Cue new_cue = Cue(time);
   for (auto const &x : info) {
     unsigned channel = x.channel;
-    int level = x.level;
-    if ((q == current_cue_number_ && x.status == BLOCKED) || level != get_tracked_level_at(q - 1, channel)) {
+    Cue::level_t level = x.level;
+    Cue::level_t tracked_level = get_tracked_level_at(q - 1, channel);
+    if ((q == current_cue_number_ && x.status == BLOCKED) || (level.pan != tracked_level.pan && level.mute != tracked_level.mute)) {
       new_cue.set_level(channel, level);
     }
   }
@@ -224,7 +225,7 @@ float CueList::fade_time() {
 Cue::level_t CueList::get_tracked_level_at(int cue,
                                            Cue::channel_t channel) {
   if (cue < 0) {
-    return 0;
+    return Cue::DEFAULT_LEVEL;
   }
   int current_cue = cue;
   if (static_cast<unsigned>(cue) >= cues_.size()) {
@@ -240,7 +241,7 @@ Cue::level_t CueList::get_tracked_level_at(int cue,
     }
     current_cue--;
   }
-  return 0;
+  return Cue::DEFAULT_LEVEL;
 }
 
 unsigned CueList::next_cue() {

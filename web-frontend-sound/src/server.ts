@@ -267,7 +267,7 @@ export default class Server {
     this.socket.send(JSON.stringify(data));
   }
 
-  set_pan(channel: number, value: number) {
+  set_level(channel: number, value: number, mute: boolean) {
 	channel = Math.floor(channel);
 	let data = {
 	  type: 'set-levels',
@@ -276,9 +276,11 @@ export default class Server {
 		{
 		  channel,
 		  value,
+          mute
 		}
 	  ]
 	};
+    console.log(data);
 	this.socket.send(JSON.stringify(data));
   }
 

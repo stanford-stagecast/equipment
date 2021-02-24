@@ -54,7 +54,7 @@ Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::s
   }
   try {
     boost::archive::xml_iarchive archive(ifs);
-    archive >> BOOST_SERIALIZATION_NVP(lists_);
+    // archive >> BOOST_SERIALIZATION_NVP(lists_);
   } catch (boost::archive::archive_exception& e) {
     cerr << e.what() << endl;
     cerr << "Could not process saved cues." << endl;
@@ -68,7 +68,7 @@ void Manager::save_to_disk() {
   std::ofstream ofs(filename_);
   {
     boost::archive::text_oarchive archive(ofs);
-    archive << BOOST_SERIALIZATION_NVP(lists_);
+    // archive << BOOST_SERIALIZATION_NVP(lists_);
   }
 }
 
@@ -99,7 +99,8 @@ void Manager::get_levels(CueList &list_) {
   for (auto info : list_.current_levels()) {
     json::ptree current;
     current.put("channel", info.channel);
-    current.put("value", info.level);
+    current.put("value", info.level.pan);
+    current.put("mute", info.level.mute);
     current.put("status", status_message(info.status));
     current.put("visible", info.visible);
     // if (info.channel < 512) {
@@ -134,21 +135,23 @@ void Manager::set_levels(CueList &list_, boost::property_tree::ptree values) {
   for (auto &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
-    int value = node.get<float>("value");
-    list_.set_level(channel, value);
+    Cue::level_t level = Cue::DEFAULT_LEVEL;
+    level.pan = node.get<int>("value");
+    level.mute = node.get<bool>("mute");
+    list_.set_level(channel, level);
   }
   get_levels(list_);
 }
 
-void Manager::set_mutes(CueList &list_, boost::property_tree::ptree values) {
-	for (auto &x : values) {
-	  json::ptree node = x.second;
-	  int channel = node.get<int>("channel");
-	  int value = node.get<bool>("value");
-	  list_.set_mute(channel, value);
-	}
-	get_levels(list_);
-}
+// void Manager::set_mutes(CueList &list_, boost::property_tree::ptree values) {
+// 	for (auto &x : values) {
+// 	  json::ptree node = x.second;
+// 	  int channel = node.get<int>("channel");
+// 	  bool mute = node.get<bool>("mute");
+// 	  list_.set_mute(channel, mute);
+// 	}
+// 	get_levels(list_);
+// }
 
 void Manager::save_cue(CueList &list_, unsigned q, float time) {
   list_.record_cue(q, time);
@@ -306,7 +309,7 @@ void Manager::on_update(string_view update) {
     } else if (type == SET_LEVELS) {
       set_levels(list, pt.get_child("values"));
   	} else if (type == SET_MUTE) {
-	  set_mutes(list, pt.get_child("values"));
+	  // set_mutes(list, pt.get_child("values"));
     } else if (type == RESET_CHANNEL) {
       reset_channel(list, pt.get<unsigned>("channel"));
     } else if (type == TRACK_CHANNEL) {

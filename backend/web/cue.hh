@@ -7,8 +7,18 @@
 
 class Cue {
 public:
+    typedef struct{
+        int pan;
+        bool mute;
+        // level_t(int pan_init=128, bool mute_init=true) : pan{pan_init}, mute{mute_init} {};
+        // bool operator==(const level_t rhs) {
+        //   return (pan == rhs.pan) && (mute == rhs.mute);
+        // }
+    } level_t;
+
+  static constexpr level_t DEFAULT_LEVEL = {128, true};
+
   typedef unsigned channel_t;
-  typedef float level_t;
   typedef std::vector<boost::optional<level_t>> levels_t;
 
 private:
