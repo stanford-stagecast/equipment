@@ -17,7 +17,6 @@
     state.cues = state.cues;
     sync();
   }
-
 </script>
 
 <main>

@@ -121,8 +121,12 @@
   Action Type:<br/>
   <!-- svelte-ignore a11y-no-onchange -->
   <select bind:value={change.type} on:change={update}>
-    <option value="media">Media</option>
-    <option value="camera">Camera</option>
+    {#if state.media && state.media.length > 0}
+      <option value="media">Media</option>
+    {/if}
+    {#if state.cameras && state.cameras.length > 0}
+      <option value="camera">Camera</option>
+    {/if}
     <option value="linked">Linked Cue</option>
   </select><br/>
 

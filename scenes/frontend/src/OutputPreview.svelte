@@ -31,6 +31,7 @@
 
     current = current || 0;
     let current_change = cue.changes[current];
+    if (!current_change) return;
     let current_type = current_change.type;
     let current_id;
     if (current_type === "media") {
@@ -38,6 +39,7 @@
     } else if (current_type === "camera") {
       current_id = current_change.camera_id;
     }
+    if (!current_id) return;
     current_id = current_id.toString();
 
     for (let x of elements) {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import server from './fake_server';
+  /* import server from './fake_server'; */
+  import server from './server';
   import type { State } from './types';
   import CuePanel from './CuePanel.svelte';
   import CameraPanel from './CameraPanel.svelte';
