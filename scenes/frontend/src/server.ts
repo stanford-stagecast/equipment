@@ -3,7 +3,7 @@ import type { Message } from './message';
 
 const wsStore = writable({});
 
-const socket = new WebSocket(`ws://${window.location.hostname}:8000/socket`);
+const socket = new WebSocket(`ws://${window.location.hostname}:8001/socket`);
 
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify({'type': 'sync'}));
