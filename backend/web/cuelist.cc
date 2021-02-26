@@ -162,7 +162,7 @@ void CueList::record_cue(unsigned q, float time) {
     unsigned channel = x.channel;
     Cue::level_t level = x.level;
     Cue::level_t tracked_level = get_tracked_level_at(q - 1, channel);
-    if ((q == current_cue_number_ && x.status == BLOCKED) || (level.pan != tracked_level.pan && level.mute != tracked_level.mute)) {
+    if ((q == current_cue_number_ && x.status == BLOCKED) || (level.pan != tracked_level.pan || level.mute != tracked_level.mute)) {
       new_cue.set_level(channel, level);
     }
   }

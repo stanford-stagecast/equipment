@@ -28,6 +28,10 @@ type FaderProps = {
 export default function Fader({state_modified, data, dispatch, server}: FaderProps) {
   let block = (
     <div className="Fader">
+        <p className={"_text _" + data.status}>
+        {data.channel}
+        </p>
+        <br/>
         <button
           onClick={() => hide_channel(data.channel, server)}>
           Hide
@@ -37,9 +41,9 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
 		<input
           id={"mute"+data.channel.toString()}
 		  type="checkbox"
-          // checked={data.mute}
-		  onChange={(event) => mute_toggled(event.target, data, server, dispatch)}
-          />
+          value="mute"
+          checked={data.mute}
+		  onChange={(event) => mute_toggled(event.target, data, server, dispatch)}/>
 		  <span className="_mute_box"><p>Mute</p></span>
 		</label>
 	  <div>
@@ -90,7 +94,7 @@ function level_changed(target: HTMLInputElement, data: FaderData, server: Server
 }
 
 function mute_toggled(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
-    data.mute = target.checked;
+    // data.mute = target.checked;
     server.set_level(data.channel, data.value, target.checked);
     dispatch({
       type: 'update_channel',

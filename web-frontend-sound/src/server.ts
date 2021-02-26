@@ -18,7 +18,7 @@ type GetLevels = {
 	  {
 		'channel': string,
 		'value': string,
-        'mute': boolean,
+        'mute': string,
 		status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
 	  }
 	]
@@ -140,7 +140,7 @@ export default class Server {
         return {
           channel: parseInt(x.channel),
           value: parseInt(x.value),
-          mute: x.mute,
+          mute: (x.mute === "true"),
           status: x.status,
         }
       }),
