@@ -79,11 +79,13 @@ class CaptionHandler(BaseHTTPRequestHandler):
 		Constructs an HTML document containing the next caption to send and posts it
 		:return: Nothing
 		"""
-		document = self.server.html.format(self.server.captioner.get_next_caption())
+		self.protocol_version = 'HTTP/1.1'
+		document = bytes(self.server.html.format(self.server.captioner.get_next_caption()), "utf-8")
 		self.send_response(200)
 		self.send_header("Content-type", "text/html; charset=UTF-8")
+		self.send_header("Content-Length", str(len(document)))
 		self.end_headers()
-		self.wfile.write(bytes(document, "utf-8"))
+		self.wfile.write(document)
 
 	def do_GET(self):
 		self.send_page()
@@ -118,7 +120,7 @@ def main():
 	# Parse args
 	if len(sys.argv) == 1:
 		print("No arguments given. Running with defaults. Try 'captioner --help' for more information")
-		hostname = "localhost"
+		hostname = "0.0.0.0"
 		port = 8000
 		html = "index.html"
 		token_file = "tokens.json"
