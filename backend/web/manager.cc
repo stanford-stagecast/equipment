@@ -53,8 +53,7 @@ Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::s
     return;
   }
   try {
-    boost::archive::xml_iarchive archive(ifs);
-    // archive >> BOOST_SERIALIZATION_NVP(lists_);
+
   } catch (boost::archive::archive_exception& e) {
     cerr << e.what() << endl;
     cerr << "Could not process saved cues." << endl;
@@ -66,10 +65,10 @@ void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 
 void Manager::save_to_disk() {
   std::ofstream ofs(filename_);
-  {
-    boost::archive::text_oarchive archive(ofs);
-    // archive << BOOST_SERIALIZATION_NVP(lists_);
+  for (auto list : lists_) {
+      ofs << make_json(list.second).str();
   }
+  ofs.close();
 }
 
 string status_message(CueList::cue_status_t status) {
@@ -89,44 +88,49 @@ string status_message(CueList::cue_status_t status) {
   return "unknown";
 }
 
-void Manager::get_levels(CueList &list_) {
-  json::ptree root;
-  json::ptree values;
-  json::ptree cue_info;
+stringstream Manager::make_json(CueList &list_) {
+    json::ptree root;
+    json::ptree values;
+    json::ptree cue_info;
 
+    for (auto info : list_.current_levels()) {
+      json::ptree current;
+      current.put("channel", info.channel);
+      current.put("value", info.level.pan);
+      current.put("mute", info.level.mute);
+      current.put("status", status_message(info.status));
+      current.put("visible", info.visible);
+      // if (info.channel < 512) {
+      //   universe[info.channel] = clamp(info.level, 0, 1);
+      // }
+      values.push_back(make_pair("", current));
+    }
+
+    {
+      cue_info.put("current", list_.cue());
+      cue_info.put("fade_time", list_.fade_time());
+      cue_info.put("fade_progress", list_.fade_progress().value_or(1));
+      cue_info.put("fading", list_.fade_progress().has_value());
+      cue_info.put("last", list_.last_cue());
+      cue_info.put("next", list_.next_cue());
+      cue_info.put("previous", list_.previous_cue());
+      cue_info.put_child("values", values);
+    }
+
+    root.put("list", list_.number());
+    root.put("type", GET_LEVELS);
+    root.put_child("cue", cue_info);
+
+
+    stringstream ss;
+    json::write_json(ss, root);
+    return ss;
+}
+
+void Manager::get_levels(CueList &list_) {
   Transmitter::universe_t universe = {0};
 
-  for (auto info : list_.current_levels()) {
-    json::ptree current;
-    current.put("channel", info.channel);
-    current.put("value", info.level.pan);
-    current.put("mute", info.level.mute);
-    current.put("status", status_message(info.status));
-    current.put("visible", info.visible);
-    // if (info.channel < 512) {
-    //   universe[info.channel] = clamp(info.level, 0, 1);
-    // }
-    values.push_back(make_pair("", current));
-  }
-
-  {
-    cue_info.put("current", list_.cue());
-    cue_info.put("fade_time", list_.fade_time());
-    cue_info.put("fade_progress", list_.fade_progress().value_or(1));
-    cue_info.put("fading", list_.fade_progress().has_value());
-    cue_info.put("last", list_.last_cue());
-    cue_info.put("next", list_.next_cue());
-    cue_info.put("previous", list_.previous_cue());
-	cue_info.put_child("values", values);
-  }
-
-  root.put("list", list_.number());
-  root.put("type", GET_LEVELS);
-  root.put_child("cue", cue_info);
-
-
-  stringstream ss;
-  json::write_json(ss, root);
+  stringstream ss = make_json(list_);
   transmitter_.update(list_.number(), universe);
   dispatcher_->do_update(string_view(ss.str()));
 }

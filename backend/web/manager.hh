@@ -33,6 +33,7 @@ private:
   void list_cues(CueList& list);
   void go_cue(CueList& list);
   void back_cue(CueList& list);
+  std::stringstream make_json(CueList& list);
 
   void get_lists();
   void rename_list(CueList& list, std::string& name);
