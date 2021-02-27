@@ -30,9 +30,11 @@ class Captioner:
 		self.token_file = token_file
 		self.key = tokens["youtube"]
 		self._url = f"http://upload.youtube.com/closedcaption?cid={self.key}&seq="
-		self._initial_seqno = tokens["last_seqno"] + 1
-		self._index = 0
+		self._seqno = tokens["last_seqno"] + 1
+		self.index = 0
 		self._captions = []
+		self._first_caption = "No previous captions"
+		self._last_caption = "No more captions"
 
 		try:
 			with open(filename, 'r') as f:
@@ -47,29 +49,32 @@ class Captioner:
 		This method sends the next caption to YouTube
 		:return: nothing
 		"""
-		if self._index >= len(self._captions):
+		if self.index >= len(self._captions):
 			print("No more captions to send")
 			return
 
 		now = (datetime.now(timezone.utc)).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
-		caption = f"{now} region:reg1#cue1\n<br>{self._captions[self._index]}<br>\n".encode("utf-8")
-		r = requests.post(f"{self._url}{self._index + self._initial_seqno}", caption, {'content-type': 'text/plain; charset=UTF-8'})
+		caption = f"{now} region:reg1#cue1\n<br>{self.get_caption(self.index)}<br>\n".encode("utf-8")
+		r = requests.post(f"{self._url}{self.index + self._seqno}", caption, {'content-type': 'text/plain; charset=UTF-8'})
 
-		self._index += 1
+		self.index += 1
+		self._seqno += 1
 		print(f"Captioner got <{r.status_code}>: {r.text}")
 
-	def get_next_caption(self):
+	def get_caption(self, i):
 		"""
 		:return: A string containing the next caption to be sent on
 		"""
-		if self._index >= len(self._captions):
-			return "No more captions"
+		if i < 0:
+			return self._first_caption
+		elif i >= len(self._captions):
+			return self._last_caption
 		else:
-			return self._captions[self._index]
+			return self._captions[i]
 
 	def save_tokens(self):
 		with open(self.token_file, 'w') as f:
-			tokens = {"youtube": self.key, "last_seqno": self._initial_seqno + self._index}
+			tokens = {"youtube": self.key, "last_seqno": self._seqno}
 			f.write(json.dumps(tokens))
 
 
@@ -80,7 +85,11 @@ class CaptionHandler(BaseHTTPRequestHandler):
 		:return: Nothing
 		"""
 		self.protocol_version = 'HTTP/1.1'
-		document = bytes(self.server.html.format(self.server.captioner.get_next_caption()), "utf-8")
+		prev_caption = self.server.captioner.get_caption(self.server.captioner.index - 1)
+		curr_caption = self.server.captioner.get_caption(self.server.captioner.index)
+		next_caption = self.server.captioner.get_caption(self.server.captioner.index + 1)
+		document = bytes(self.server.html.format(prev_caption, curr_caption, next_caption), "utf-8")
+
 		self.send_response(200)
 		self.send_header("Content-type", "text/html; charset=UTF-8")
 		self.send_header("Content-Length", str(len(document)))
