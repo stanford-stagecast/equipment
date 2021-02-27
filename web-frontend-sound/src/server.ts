@@ -1,7 +1,7 @@
 import {Dispatch} from 'react';
 import Action from './action';
 
-const SERVER_URL: string = `ws://${window.location.hostname}:8001`;
+const SERVER_URL: string = `ws://${window.location.hostname}:9001`;
 
 type GetLevels = {
   type: 'get-levels',

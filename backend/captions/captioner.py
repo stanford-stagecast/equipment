@@ -121,7 +121,7 @@ def main():
 	if len(sys.argv) == 1:
 		print("No arguments given. Running with defaults. Try 'captioner --help' for more information")
 		hostname = "0.0.0.0"
-		port = 8000
+		port = 9000
 		html = "index.html"
 		token_file = "tokens.json"
 		caption_file = "captions.txt"
