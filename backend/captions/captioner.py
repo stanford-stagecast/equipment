@@ -72,6 +72,15 @@ class Captioner:
 		else:
 			return self._captions[i]
 
+	def next(self):
+		self.index = min(self.index + 1, len(self._captions) - 1)
+
+	def back(self):
+		self.index = max(self.index - 1, 0)
+
+	def reset(self):
+		self.index = 0
+
 	def save_tokens(self):
 		with open(self.token_file, 'w') as f:
 			tokens = {"youtube": self.key, "last_seqno": self._seqno}
@@ -104,7 +113,23 @@ class CaptionHandler(BaseHTTPRequestHandler):
 		Sends the next caption and updates the webpage
 		:return:
 		"""
-		self.server.captioner.send_next_caption()
+		length = int(self.headers.get("Content-Length"))
+		body = str(self.rfile.read(length))
+		response = body[body.find('=')+1:-1]
+
+		if response == "send":
+			print("Sending a caption")
+			self.server.captioner.send_next_caption()
+		elif response == "next":
+			print("Staging next caption")
+			self.server.captioner.next()
+		elif response == "back":
+			print("Staging previous caption")
+			self.server.captioner.back()
+		elif response == "reset":
+			print("Resetting caption counter")
+			self.server.captioner.reset()
+
 		self.send_page()
 
 
