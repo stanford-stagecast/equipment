@@ -139,7 +139,7 @@ export default class Server {
       values: values.map((x) => {
         return {
           channel: parseInt(x.channel),
-          value: parseInt(x.value),
+          value: parseFloat(x.value) * 255,
           mute: (x.mute === "true"),
           status: x.status,
         }

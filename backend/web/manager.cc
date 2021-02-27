@@ -66,7 +66,9 @@ void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 void Manager::save_to_disk() {
   std::ofstream ofs(filename_);
   for (auto list : lists_) {
-      ofs << make_json(list.second).str();
+      stringstream ss;
+      json::write_json(ss, make_cuelist_json(list.second));
+      ofs << ss.str();
   }
   ofs.close();
 }
@@ -88,7 +90,26 @@ string status_message(CueList::cue_status_t status) {
   return "unknown";
 }
 
-stringstream Manager::make_json(CueList &list_) {
+json::ptree Manager::make_cuelist_json(CueList &list_) {
+    json::ptree root;
+    json::ptree cues;
+    root.put("list", list_.number());
+    list_.go_to_cue(0); // Scroll the list back
+
+    while (list_.cue() != list_.next_cue()) {
+        json::ptree cue = make_cue_json(list_);
+        cues.put_child(to_string(list_.cue()), cue);
+        list_.go();
+    }
+    if (list_.cue() != 0) {
+        json::ptree cue = make_cue_json(list_);
+        cues.put_child(to_string(list_.cue()), cue);
+    }
+    root.put_child("cues", cues);
+    return root;
+}
+
+json::ptree Manager::make_cue_json(CueList &list_) {
     json::ptree root;
     json::ptree values;
     json::ptree cue_info;
@@ -96,7 +117,7 @@ stringstream Manager::make_json(CueList &list_) {
     for (auto info : list_.current_levels()) {
       json::ptree current;
       current.put("channel", info.channel);
-      current.put("value", info.level.pan);
+      current.put("value", (static_cast<float>(clamp(info.level.pan, 0, 255))) / 255.0);
       current.put("mute", info.level.mute);
       current.put("status", status_message(info.status));
       current.put("visible", info.visible);
@@ -121,16 +142,14 @@ stringstream Manager::make_json(CueList &list_) {
     root.put("type", GET_LEVELS);
     root.put_child("cue", cue_info);
 
-
-    stringstream ss;
-    json::write_json(ss, root);
-    return ss;
+    return root;
 }
 
 void Manager::get_levels(CueList &list_) {
   Transmitter::universe_t universe = {0};
 
-  stringstream ss = make_json(list_);
+  stringstream ss;
+  json::write_json(ss, make_cue_json(list_));
   transmitter_.update(list_.number(), universe);
   dispatcher_->do_update(string_view(ss.str()));
 }

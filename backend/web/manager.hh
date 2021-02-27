@@ -33,7 +33,8 @@ private:
   void list_cues(CueList& list);
   void go_cue(CueList& list);
   void back_cue(CueList& list);
-  std::stringstream make_json(CueList& list);
+  boost::property_tree::ptree make_cue_json(CueList& list);
+  boost::property_tree::ptree make_cuelist_json(CueList& list);
 
   void get_lists();
   void rename_list(CueList& list, std::string& name);
