@@ -1,0 +1,3 @@
+# Ignore python files and pycharm files
+.idea
+__pycache__

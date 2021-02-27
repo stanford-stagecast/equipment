@@ -26,12 +26,15 @@ private:
   std::string filename_;
 
   void set_levels(CueList& list, boost::property_tree::ptree values);
+  void set_mutes(CueList& list, boost::property_tree::ptree values);
   void save_cue(CueList& list, unsigned q, float time);
   void restore_cue(CueList& list, unsigned q);
   void delete_cue(CueList& list, unsigned q);
   void list_cues(CueList& list);
   void go_cue(CueList& list);
   void back_cue(CueList& list);
+  boost::property_tree::ptree make_cue_json(CueList& list);
+  boost::property_tree::ptree make_cuelist_json(CueList& list);
 
   void get_lists();
   void rename_list(CueList& list, std::string& name);

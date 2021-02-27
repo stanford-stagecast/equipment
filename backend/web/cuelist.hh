@@ -78,6 +78,7 @@ public:
 
   std::vector<level_info_t> current_levels();
   void set_level(Cue::channel_t channel, boost::optional<Cue::level_t> level);
+  // void set_mute(Cue::channel_t channel, boost::optional<bool> mute);
   void track(Cue::channel_t channel);
   void block(Cue::channel_t channel);
   void show(Cue::channel_t channel);

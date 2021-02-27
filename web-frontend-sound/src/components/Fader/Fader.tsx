@@ -26,8 +26,12 @@ type FaderProps = {
  * single dimmer's intensity).
  */
 export default function Fader({state_modified, data, dispatch, server}: FaderProps) {
-  return (
+  let block = (
     <div className="Fader">
+        <p className={"_text _" + data.status}>
+        {data.channel}
+        </p>
+        <br/>
         <button
           onClick={() => hide_channel(data.channel, server)}>
           Hide
@@ -35,8 +39,11 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
 		<label
 		className="_mute">
 		<input
+          id={"mute"+data.channel.toString()}
 		  type="checkbox"
-		  onChange={(event) => server.toggle_mute(data.channel, event.target.checked)}/>
+          value="mute"
+          checked={data.mute}
+		  onChange={(event) => mute_toggled(event.target, data, server, dispatch)}/>
 		  <span className="_mute_box"><p>Mute</p></span>
 		</label>
 	  <div>
@@ -48,7 +55,7 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
 		min="0"
 		max="255"
 		value={data.value}
-		onChange={(event) => pan_changed(event.target, data, server, dispatch)}/>
+		onChange={(event) => level_changed(event.target, data, server, dispatch)}/>
 	  </span>
 	  </div>
       <button
@@ -68,20 +75,35 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
       </button>
     </div>
   );
+  return block;
 }
 
 /**
  * A fader was moved; dispatch the appropriate events to update the state.
  */
-function pan_changed(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
-  server.set_pan(data.channel, parseFloat(target.value));
+function level_changed(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
+  server.set_level(data.channel, parseInt(target.value), data.mute);
   dispatch({
     type: 'update_channel',
     value: {
       ...data,
       value: parseInt(target.value),
+      mute: data.mute
     }
   });
+}
+
+function mute_toggled(target: HTMLInputElement, data: FaderData, server: Server, dispatch: Dispatch<Action>) {
+    // data.mute = target.checked;
+    server.set_level(data.channel, data.value, target.checked);
+    dispatch({
+      type: 'update_channel',
+      value: {
+        ...data,
+        value: parseInt(target.value),
+        mute: data.mute
+      }
+    });
 }
 
 function hide_channel(channel: number, server: Server) {

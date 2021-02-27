@@ -39,7 +39,7 @@ export const initialState: AppState = {
   },
   cues: [],
   faders: [
-    {channel: 0, value: 0, status: 'manual'},
+    {channel: 0, value: 128, mute: true, status: 'manual'},
   ],
   lists: {
     id: 0,

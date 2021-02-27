@@ -1,6 +1,7 @@
 export type Channel = {
   channel: number,
   value: number,
+  mute: boolean,
   status: 'manual' | 'lowered' | 'raised' | 'tracked' | 'blocked';
 };
 

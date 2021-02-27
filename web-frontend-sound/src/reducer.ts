@@ -33,6 +33,7 @@ function update_channel(state: AppState, value: Channel): AppState {
       return {
         channel: fader.channel,
         value: value.value,
+        mute: value.mute,
         status: value.status,
       }
     } else {

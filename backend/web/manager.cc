@@ -21,6 +21,7 @@ static const string DELETE_LIST = "delete-list";
 static const string LIST_CUES = "list-cues";
 static const string GET_LEVELS = "get-levels";
 static const string SET_LEVELS = "set-levels";
+static const string SET_MUTE = "set-mute";
 static const string SAVE_CUE = "save-cue";
 static const string RESTORE_CUE = "restore-cue";
 
@@ -52,8 +53,7 @@ Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::s
     return;
   }
   try {
-    boost::archive::xml_iarchive archive(ifs);
-    archive >> BOOST_SERIALIZATION_NVP(lists_);
+
   } catch (boost::archive::archive_exception& e) {
     cerr << e.what() << endl;
     cerr << "Could not process saved cues." << endl;
@@ -65,10 +65,12 @@ void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 
 void Manager::save_to_disk() {
   std::ofstream ofs(filename_);
-  {
-    boost::archive::xml_oarchive archive(ofs);
-    archive << BOOST_SERIALIZATION_NVP(lists_);
+  for (auto list : lists_) {
+      stringstream ss;
+      json::write_json(ss, make_cuelist_json(list.second));
+      ofs << ss.str();
   }
+  ofs.close();
 }
 
 string status_message(CueList::cue_status_t status) {
@@ -88,42 +90,66 @@ string status_message(CueList::cue_status_t status) {
   return "unknown";
 }
 
-void Manager::get_levels(CueList &list_) {
-  json::ptree root;
-  json::ptree values;
-  json::ptree cue_info;
+json::ptree Manager::make_cuelist_json(CueList &list_) {
+    json::ptree root;
+    json::ptree cues;
+    root.put("list", list_.number());
+    list_.go_to_cue(0); // Scroll the list back
 
+    while (list_.cue() != list_.next_cue()) {
+        json::ptree cue = make_cue_json(list_);
+        cues.put_child(to_string(list_.cue()), cue);
+        list_.go();
+    }
+    if (list_.cue() != 0) {
+        json::ptree cue = make_cue_json(list_);
+        cues.put_child(to_string(list_.cue()), cue);
+    }
+    root.put_child("cues", cues);
+    return root;
+}
+
+json::ptree Manager::make_cue_json(CueList &list_) {
+    json::ptree root;
+    json::ptree values;
+    json::ptree cue_info;
+
+    for (auto info : list_.current_levels()) {
+      json::ptree current;
+      current.put("channel", info.channel);
+      current.put("value", clamp(info.level.pan / 255.0, 0.0, 1.0));
+      current.put("mute", info.level.mute);
+      current.put("status", status_message(info.status));
+      current.put("visible", info.visible);
+      // if (info.channel < 512) {
+      //   universe[info.channel] = clamp(info.level, 0, 1);
+      // }
+      values.push_back(make_pair("", current));
+    }
+
+    {
+      cue_info.put("current", list_.cue());
+      cue_info.put("fade_time", list_.fade_time());
+      cue_info.put("fade_progress", list_.fade_progress().value_or(1));
+      cue_info.put("fading", list_.fade_progress().has_value());
+      cue_info.put("last", list_.last_cue());
+      cue_info.put("next", list_.next_cue());
+      cue_info.put("previous", list_.previous_cue());
+      cue_info.put_child("values", values);
+    }
+
+    root.put("list", list_.number());
+    root.put("type", GET_LEVELS);
+    root.put_child("cue", cue_info);
+
+    return root;
+}
+
+void Manager::get_levels(CueList &list_) {
   Transmitter::universe_t universe = {0};
 
-  for (auto info : list_.current_levels()) {
-    json::ptree current;
-    current.put("channel", info.channel);
-    current.put("value", info.level);
-    current.put("status", status_message(info.status));
-    current.put("visible", info.visible);
-    if (info.channel < 512) {
-      universe[info.channel] = clamp(info.level, 0, 255);
-    }
-    values.push_back(make_pair("", current));
-  }
-
-  {
-    cue_info.put("current", list_.cue());
-    cue_info.put("fade_time", list_.fade_time());
-    cue_info.put("fade_progress", list_.fade_progress().value_or(1));
-    cue_info.put("fading", list_.fade_progress().has_value());
-    cue_info.put("last", list_.last_cue());
-    cue_info.put("next", list_.next_cue());
-    cue_info.put("previous", list_.previous_cue());
-  }
-
-  root.put("list", list_.number());
-  root.put("type", GET_LEVELS);
-  root.put_child("cue", cue_info);
-  root.put_child("values", values);
-
   stringstream ss;
-  json::write_json(ss, root);
+  json::write_json(ss, make_cue_json(list_));
   transmitter_.update(list_.number(), universe);
   dispatcher_->do_update(string_view(ss.str()));
 }
@@ -132,11 +158,23 @@ void Manager::set_levels(CueList &list_, boost::property_tree::ptree values) {
   for (auto &x : values) {
     json::ptree node = x.second;
     int channel = node.get<int>("channel");
-    int value = node.get<int>("value");
-    list_.set_level(channel, value);
+    Cue::level_t level = Cue::DEFAULT_LEVEL;
+    level.pan = node.get<int>("value");
+    level.mute = node.get<bool>("mute");
+    list_.set_level(channel, level);
   }
   get_levels(list_);
 }
+
+// void Manager::set_mutes(CueList &list_, boost::property_tree::ptree values) {
+// 	for (auto &x : values) {
+// 	  json::ptree node = x.second;
+// 	  int channel = node.get<int>("channel");
+// 	  bool mute = node.get<bool>("mute");
+// 	  list_.set_mute(channel, mute);
+// 	}
+// 	get_levels(list_);
+// }
 
 void Manager::save_cue(CueList &list_, unsigned q, float time) {
   list_.record_cue(q, time);
@@ -293,6 +331,8 @@ void Manager::on_update(string_view update) {
       get_levels(list);
     } else if (type == SET_LEVELS) {
       set_levels(list, pt.get_child("values"));
+  	} else if (type == SET_MUTE) {
+	  // set_mutes(list, pt.get_child("values"));
     } else if (type == RESET_CHANNEL) {
       reset_channel(list, pt.get<unsigned>("channel"));
     } else if (type == TRACK_CHANNEL) {
