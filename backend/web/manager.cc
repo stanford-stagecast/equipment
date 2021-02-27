@@ -117,7 +117,7 @@ json::ptree Manager::make_cue_json(CueList &list_) {
     for (auto info : list_.current_levels()) {
       json::ptree current;
       current.put("channel", info.channel);
-      current.put("value", (static_cast<float>(clamp(info.level.pan, 0, 255))) / 255.0);
+      current.put("value", clamp(info.level.pan / 255.0, 0.0, 1.0));
       current.put("mute", info.level.mute);
       current.put("status", status_message(info.status));
       current.put("visible", info.visible);
