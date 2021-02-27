@@ -1,2 +1,5 @@
 # We don't want to put stream keys on github
 tokens.json
+
+# And the scripts also shouldn't be public
+captions.txt
