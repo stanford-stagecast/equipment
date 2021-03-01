@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import sys
 import socket
 import json
+import signal
 
 
 class Captioner:
@@ -179,14 +180,16 @@ def main():
 		print(f"Name or service unknown: {hostname}:{port}")
 		return 1
 
-	try:
-		server.serve_forever()
-	except KeyboardInterrupt:
-		print("Saving tokens")
+	def sigterm_handler(signum, frame):
+		print("Saving captions")
 		server.captioner.save_tokens()
+		print("Closing CaptionServer")
+		server.server_close()
+		sys.exit(0)
 
-	print("Closing CaptionServer")
-	server.server_close()
+	signal.signal(signal.SIGTERM, sigterm_handler)
+	signal.signal(signal.SIGINT, sigterm_handler)
+	server.serve_forever()
 	return 0
 
 
