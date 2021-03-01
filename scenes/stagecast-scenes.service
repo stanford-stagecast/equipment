@@ -3,7 +3,7 @@ Description=Stagecast Scene interface
 
 [Service]
 Type=simple
-WorkingDirectory=/home/akshay/Documents/Stagecast/equipment/scenes
-ExecStart=/home/akshay/Documents/Stagecast/equipment/scenes/run.sh
+WorkingDirectory=/home/cueserver/equipment/scenes
+ExecStart=/home/cueserver/equipment/scenes/run.sh
 Restart=always
 RestartSec=30
