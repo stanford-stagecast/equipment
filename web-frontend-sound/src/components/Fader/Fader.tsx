@@ -21,6 +21,15 @@ type FaderProps = {
   server: Server;
 }
 
+function get_name(n: number) {
+    var names = ["Aiyana", "Alexa", "Audrey", "Gelsey", "JJ", "Josh", "Justine", "Keith", "KeithBox", "Mariel", "Michael", "Sam"];
+    if (n > names.length) {
+        return "";
+    } else {
+        return names[n];
+    }
+}
+
 /**
  * Represents a basic one-channel input (e.g. a single channel's volume or a
  * single dimmer's intensity).
@@ -29,7 +38,7 @@ export default function Fader({state_modified, data, dispatch, server}: FaderPro
   let block = (
     <div className="Fader">
         <p className={"_text _" + data.status}>
-        {data.channel}
+        {data.channel}: {get_name(data.channel)}
         </p>
         <br/>
         <button
