@@ -1,0 +1,10 @@
+[Unit]
+Description=Stagecast Captioner
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cueserver/equipment/backend/captions
+ExecStart=/home/cueserver/equipment/backend/captions/captioner
+Restart=always
+RestartSec=30
+

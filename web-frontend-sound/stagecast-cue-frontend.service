@@ -1,0 +1,10 @@
+[Unit]
+Description=Stagecast Cue Frontend
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cueserver/equipment/web-frontend-sound
+ExecStart=/home/cueserver/equipment/web-frontend-sound/node_modules/serve/bin/serve.js -s -l 9002 build
+Restart=always
+RestartSec=30
+
