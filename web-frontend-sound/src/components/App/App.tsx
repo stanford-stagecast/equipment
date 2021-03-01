@@ -78,7 +78,6 @@ export default function App(_props: {}) {
 
   return (
     <div className="App">
-      <ListControls data={state.lists} server={server.current as Server} dispatch={dispatch}/>
       <div className="FaderBank">
         {
           state.faders.sort((a, b) => (a.channel > b.channel) ? 1 : -1).map((faderState: FaderData, i: number) => {
