@@ -53,7 +53,8 @@ Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::s
     return;
   }
   try {
-
+    boost::archive::xml_iarchive archive(ifs);
+    archive >> BOOST_SERIALIZATION_NVP(lists_);
   } catch (boost::archive::archive_exception& e) {
     cerr << e.what() << endl;
     cerr << "Could not process saved cues." << endl;
@@ -64,13 +65,11 @@ Manager::Manager(shared_ptr<Dispatcher> dispatcher, net::io_context &ioc, std::s
 void Manager::begin() { dispatcher_->subscribe(weak_from_this()); }
 
 void Manager::save_to_disk() {
-  std::ofstream ofs(filename_);
-  for (auto list : lists_) {
-      stringstream ss;
-      json::write_json(ss, make_cuelist_json(list.second));
-      ofs << ss.str();
-  }
-  ofs.close();
+    std::ofstream ofs(filename_);
+    {
+      boost::archive::xml_oarchive archive(ofs);
+      archive << BOOST_SERIALIZATION_NVP(lists_);
+    }
 }
 
 string status_message(CueList::cue_status_t status) {

@@ -10,10 +10,12 @@ public:
     typedef struct{
         int pan;
         bool mute;
-        // level_t(int pan_init=128, bool mute_init=true) : pan{pan_init}, mute{mute_init} {};
-        // bool operator==(const level_t rhs) {
-        //   return (pan == rhs.pan) && (mute == rhs.mute);
-        // }
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+            (void) version;
+            ar & BOOST_SERIALIZATION_NVP(pan);
+            ar & BOOST_SERIALIZATION_NVP(mute);
+        }
     } level_t;
 
   static constexpr level_t DEFAULT_LEVEL = {128, true};
