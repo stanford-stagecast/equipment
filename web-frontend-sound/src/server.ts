@@ -131,7 +131,6 @@ export default class Server {
   }
 
   private get_levels(msg: GetLevels) {
-	console.log(msg);
     if (parseInt(msg.list) !== this.list_id) return;
     let values = msg.cue.values || [];
     this.dispatch({
