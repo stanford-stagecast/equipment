@@ -1,0 +1,10 @@
+[Unit]
+Description=Stagecast Cue Backend
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cueserver/equipment/backend/build/web
+ExecStart=/home/cueserver/equipment/backend/build/web/web_backend cue.xml 9001 1
+Restart=always
+RestartSec=30
+

@@ -1,0 +1,11 @@
+[Unit]
+Description=Stagecast Captioner
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cueserver/equipment/backend/captions
+ExecStart=python3 /home/cueserver/equipment/backend/captions/captioner.py
+KillMode=mixed
+Restart=always
+RestartSec=30
+
