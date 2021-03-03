@@ -82,6 +82,18 @@ class Captioner:
 	def reset(self):
 		self.index = 0
 
+	def pilot(self):
+		self.index = self._captions.index("A TV Pilot I Failed To Sell")
+
+	def unboxing(self):
+		self.index = self._captions.index("Unboxing")
+
+	def loup(self):
+		self.index = self._captions.index("Loup Garou")
+
+	def reentry(self):
+		self.index = self._captions.index("Re-entry Camp")
+
 	def save_tokens(self):
 		with open(self.token_file, 'w') as f:
 			tokens = {"youtube": self.key, "last_seqno": self._seqno}
@@ -130,6 +142,18 @@ class CaptionHandler(BaseHTTPRequestHandler):
 		elif response == "reset":
 			print("Resetting caption counter")
 			self.server.captioner.reset()
+		elif response == "pilot":
+			print("Going to the top of A TV Pilot I Failed To Sell")
+			self.server.captioner.pilot()
+		elif response == "unboxing":
+			print("Going to the top of Unboxing")
+			self.server.captioner.unboxing()
+		elif response == "loup":
+			print("Going to the top of Loup Garou")
+			self.server.captioner.loup()
+		elif response == "reentry":
+			print("Going to the top of A TV Pilot I Failed To Sell")
+			self.server.captioner.reentry()
 
 		self.send_page()
 
