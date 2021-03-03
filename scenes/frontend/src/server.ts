@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import type { Message } from './message';
 
 const wsStore = writable({});
+const cueStore = writable(0);
 
 const socket = new WebSocket(`ws://${window.location.hostname}:8001/socket`);
 
@@ -16,6 +17,12 @@ socket.addEventListener('message', (event) => {
     case 'sync': {
       let data = json.data;
       wsStore.set(data);
+      break;
+    }
+    case 'go': {
+      let data = json.data;
+      if (!data || !data.cue) return;
+      cueStore.set(data.cue);
       break;
     }
     case 'success': {
@@ -41,5 +48,6 @@ const sendMessage = (message: Message) => {
 
 export default {
   subscribe: wsStore.subscribe,
+  subscribe_cue: cueStore.subscribe,
   sendMessage,
 }

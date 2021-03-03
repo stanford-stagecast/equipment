@@ -5,9 +5,11 @@ import tornado.ioloop
 import tornado.web
 
 from client import ClientHandler
+from live import LiveHandler
 from export import ExportHandler
 
 from state import State
+from playback import Playback
 from serializer import deserialize
 
 
@@ -20,6 +22,7 @@ def make_app(static_path: str) -> tornado.web.Application:
     return tornado.web.Application(
         [
             (r"/socket", ClientHandler),
+            (r"/live", LiveHandler),
             (r"/export(.json)?", ExportHandler),
             (r"/", IndexHandler),
             (r"/(.*)", tornado.web.StaticFileHandler, {"path": static_path}),

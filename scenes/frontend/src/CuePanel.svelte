@@ -4,6 +4,7 @@
 
   export let state: State;
   export let sync: Function;
+  export let go: Function;
 
   let current: string;
   let selected_cue: Cue;
@@ -108,6 +109,13 @@
     current = undefined;
     sync();
   }
+
+  function load_cue() {
+    if (selected_cue) {
+      go(selected_cue.number)
+      next_cue();
+    }
+  }
 </script>
 
 <main>
@@ -132,9 +140,16 @@
     <button id="next" on:click={next_cue} disabled={!active || !have_next}>Next</button>
     <br/>
     {#if active}
+      <button id="load" on:click={load_cue}>Cue {selected_cue.number / 100} GO</button>
+    {/if}
+    <br/>
+    {#if active}
       <CueEditor bind:state={state} bind:cue={selected_cue} sync={sync}/>
     {/if}
 </main>
 
 <style>
+  #load {
+    font-size: 24pt;
+  }
 </style>

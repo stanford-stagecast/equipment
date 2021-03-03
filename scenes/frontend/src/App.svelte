@@ -6,12 +6,14 @@
   import CuePanel from './CuePanel.svelte';
   import CameraPanel from './CameraPanel.svelte';
   import MediaPanel from './MediaPanel.svelte';
+  import LivePanel from './LivePanel.svelte';
 
   let state: State = {
     cameras: [],
     media: [],
     cues: [],
   };
+  let playing_cue = 0;
 
   let initialized = false;
 
@@ -19,6 +21,9 @@
     server.subscribe((msg: State) => {
       state = msg;
       initialized = true;
+    });
+    server.subscribe_cue((cue: number) => {
+      playing_cue = cue;
     });
   });
 
@@ -34,6 +39,15 @@
       'type': 'save',
     });
   }
+
+  function go(q: number) {
+    server.sendMessage({
+      'type': 'go',
+      'data': {
+        'cue': q,
+      }
+    });
+  }
 </script>
 
 <main>
@@ -41,8 +55,11 @@
     <button id="save" on:click={save} disabled={!initialized}>Save to Disk</button>
     <br/>
   </div>
+  <div id="live" class="panel">
+    <LivePanel go={go} bind:live={playing_cue} bind:state={state}/>
+  </div>
   <div id="cues" class="panel">
-    <CuePanel sync={sync} bind:state={state}/>
+    <CuePanel sync={sync} go={go} bind:state={state}/>
   </div>
   <div id="media" class="panel">
     <MediaPanel sync={sync} bind:state={state}/>
