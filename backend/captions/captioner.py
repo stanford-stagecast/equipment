@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import sys
 import socket
@@ -36,6 +36,8 @@ class Captioner:
 		self._captions = []
 		self._first_caption = "No previous captions"
 		self._last_caption = "No more captions"
+		self._time_offset = timedelta(seconds=0)
+		self.heartbeat()
 
 		try:
 			with open(filename, 'r') as f:
@@ -44,6 +46,13 @@ class Captioner:
 		except FileNotFoundError:
 			print(f"No such file or directory {filename}")
 			raise FileNotFoundError
+
+	def heartbeat(self):
+		now_time = datetime.utcnow()
+		now = now_time.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+		r = requests.post(f"{self._url}", now, {'content-type': 'text/plain; charset=UTF-8'})
+		self._time_offset = (datetime.strptime(r.text.split()[0], '%Y-%m-%dT%H:%M:%S.%f') - now_time)
+		print(f"Heartbeat got an offset of {self._time_offset.total_seconds()} seconds")
 
 	def send_next_caption(self):
 		"""
@@ -54,9 +63,14 @@ class Captioner:
 			print("No more captions to send")
 			return
 
-		now = (datetime.now(timezone.utc)).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
-		caption = f"{now} region:reg1#cue1\n<br>{self.get_caption(self.index)}<br>\n".encode("utf-8")
+		now_time = datetime.utcnow()
+		now = (now_time + self._time_offset).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+		caption = f"{now} region:reg1#cue1\n<br>{self.get_caption(self.index)}\n".encode("utf-8")
+		print(f"\n{caption.decode('utf-8')}\n")
 		r = requests.post(f"{self._url}{self.index + self._seqno}", caption, {'content-type': 'text/plain; charset=UTF-8'})
+
+		# update time offset with new time from youtube
+		self._time_offset = (datetime.strptime(r.text.split()[0], '%Y-%m-%dT%H:%M:%S.%f') - now_time)
 
 		self.index += 1
 		self._seqno += 1
